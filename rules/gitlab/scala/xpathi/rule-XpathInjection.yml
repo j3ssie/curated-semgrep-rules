@@ -1,0 +1,37 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_xpathi_rule-XpathInjection"
+  languages:
+  - "scala"
+  message: |
+    The input values included in SQL queries need to be passed in safely. Bind
+    variables in prepared statements can be used to easily mitigate the risk of
+    SQL injection.
+  metadata:
+    category: "security"
+    cwe: "CWE-611"
+    shortDescription: "Improper Restriction of XML External Entity Reference ('XXE')"
+  mode: "taint"
+  pattern-sinks:
+  - patterns:
+    - pattern-either:
+      - pattern-inside: |-
+          import javax.xml.xpath._
+          ...
+      - pattern-inside: |-
+          import javax.xml.xpath.XPath
+          ...
+    - pattern-either:
+      - pattern: "$Y.compile(...)"
+      - pattern: "$X.evaluate(..., $ARG2)"
+  pattern-sources:
+  - patterns:
+    - pattern-inside: |
+        def $FUNC(..., $ARG: $TYPE,...): $RET = {
+          ...
+        }
+    - pattern: "$ARG"
+  severity: "ERROR"

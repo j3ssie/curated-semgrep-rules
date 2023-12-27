@@ -1,0 +1,40 @@
+# yamllint disable
+# License: GNU Lesser General Public License v3.0
+# source (original): https://github.com/ajinabraham/njsscan/blob/master/njsscan/rules/semantic_grep/database/sequelize_weak_tls.yaml
+# hash: e7a0a61
+# yamllint enable
+---
+rules:
+- id: "rules_lgpl_javascript_database_rule-sequelize-weak-tls"
+  message: |
+    'The Sequelize connection string indicates that an older version of TLS is in use. TLS1.0 and TLS1.1 are deprecated and should be used. By default, Sequelize use TLSv1.2 but it''s recommended to use TLS1.3. Not applicable to SQLite database.
+
+    '
+  metadata:
+    owasp: "A6:2017-Security Misconfiguration"
+    cwe: "CWE-757: Selection of Less-Secure Algorithm During Negotiation (Algorithm
+      Downgrade)"
+  severity: "ERROR"
+  languages:
+  - "javascript"
+  patterns:
+  - pattern-inside: |
+      {
+        host: $HOST,
+        database: $DATABASE,
+        dialect: $DIALECT,
+        dialectOptions:
+          { ssl: ... }
+       }
+  - pattern-either:
+    - pattern: |
+        {
+          minVersion: 'TLSv1'
+        }
+    - pattern: |
+        {
+          minVersion: 'TLSv1.1'
+        }
+  - metavariable-regex:
+      metavariable: "$DIALECT"
+      regex: "['\"](mariadb|mysql|postgres)['\"]"

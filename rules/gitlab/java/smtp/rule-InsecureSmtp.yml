@@ -1,0 +1,67 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "java_smtp_rule-InsecureSmtp"
+  languages:
+  - "java"
+  patterns:
+  - pattern-either:
+    - pattern-inside: |
+        $E = new org.apache.commons.mail.SimpleEmail(...);
+        ...
+    - pattern-inside: |
+        $E = new org.apache.commons.mail.Email(...);
+        ...
+    - pattern-inside: |
+        $E = new org.apache.commons.mail.MultiPartEmail(...);
+        ...
+    - pattern-inside: |
+        $E = new org.apache.commons.mail.HtmlEmail(...);
+        ...
+    - pattern-inside: |
+        $E = new org.apache.commons.mail.ImageHtmlEmail(...);
+        ...
+  - pattern-not: |
+      $E.setSSLOnConnect(true);
+      ...
+      $E.setSSLCheckServerIdentity(true);
+  message: |
+    The Apache commons mail client by default does not enable TLS server identity.
+    This allows for an adversary who is in between the application and the target host to intercept
+    potentially sensitive information or transmit malicious data.
+
+    Enable checking server identity by calling `Email.setSSLCheckServerIdentity(true)`
+
+    Example email client that enables TLS and server identity:
+    ```
+    // Create an email client
+    Email email = new SimpleEmail();
+    // Configure the email hostname
+    email.setHostName("smtp.mail.example.com");
+    // Set the port
+    email.setSmtpPort(465);
+    // Securely retrieve username and password values
+    String username = getUserNameFromKMSorSecretStore();
+    String password = getPasswordFromKMSorSecretStore();
+    // Configure the Authenticator
+    DefaultAuthenticator auth = new DefaultAuthenticator(username, password);
+    // Set the authenticator
+    email.setAuthenticator(auth);
+    // Ensure we use SSL on connect
+    email.setSSLOnConnect(true);
+    // Ensure we validate server identity
+    email.setSSLCheckServerIdentity(true);
+    // configure the rest of the email
+    email.setFrom("x@example.com");
+    email.setSubject("TestMail");
+    email.setMsg("This is a test mail ... :-)");
+    email.addTo("y@example.com");
+    email.send();
+    ```
+  metadata:
+    shortDescription: "Improper validation of certificate with host mismatch"
+    category: "security"
+    cwe: "CWE-297"
+  severity: "ERROR"

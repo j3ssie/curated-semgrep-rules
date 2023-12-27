@@ -1,0 +1,25 @@
+# yamllint disable
+# License: GNU Lesser General Public License v3.0
+# source (original): https://github.com/ajinabraham/njsscan/blob/master/njsscan/rules/semantic_grep/xml/xxe_sax.yaml
+# hash: e7a0a61
+# yamllint enable
+---
+rules:
+- id: "rules_lgpl_javascript_xml_rule-xxe-sax"
+  pattern-either:
+  - pattern: |
+      require('sax')
+      ...
+      $PARSER.ondoctype = ...;
+  - pattern: |-
+      require('sax')
+      ...
+      $PARSER.on('doctype',...)
+  severity: "WARNING"
+  languages:
+  - "javascript"
+  message: |
+    Use of 'ondoctype' in 'sax' library detected. By default, 'sax' won't do anything with custom DTD entity definitions. If you're implementing a custom DTD entity definition, be sure not to introduce XML External Entity (XXE) vulnerabilities, or be absolutely sure that external entities received from a trusted source while processing XML.
+  metadata:
+    owasp: "A4:2017-XML External Entities (XXE)"
+    cwe: "CWE-611: Improper Restriction of XML External Entity Reference"

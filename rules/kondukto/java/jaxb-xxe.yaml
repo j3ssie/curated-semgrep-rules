@@ -1,0 +1,30 @@
+rules:
+- id: XXE
+  metadata:
+    owasp: "A4: XXE"
+    cwe: 'CWE-611'
+    references:
+      - https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html
+      - https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.md
+  patterns:
+  - pattern-either: 
+    - pattern: |
+        JAXBContext $JC = $W.newInstance($CLASS);
+        ...
+        Unmarshaller $JU = $JC.createUnmarshaller();
+
+  - pattern-not-inside: |
+        $RETURNTYPE $METHOD(...) {
+          ...
+          $X.setFeature("http://xml.org/sax/features/external-general-entities", false);
+          $X.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+          $X.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+          ...
+        }     
+
+  message: |
+    Generic XXE in `$JC`. The 'javax.xml.bind.Unmarshaller' parses XML and does not support any flags for disabling XXE, it's imperative
+    to parse the untrusted XML through a configurable secure parser first, generate a source object as a result, and pass the
+    source object to the Unmarshaller.
+  languages: [java]
+  severity: ERROR

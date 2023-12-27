@@ -1,0 +1,269 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "java_inject_rule-SqlInjection"
+  languages:
+  - "java"
+  message: |
+    SQL Injection is a critical vulnerability that can lead to data or system compromise. By
+    dynamically generating SQL query strings, user input may be able to influence the logic of
+    the SQL statement. This could lead to an adversary accessing information they should
+    not have access to, or in some circumstances, being able to execute OS functionality or code.
+
+    Replace all dynamically generated SQL queries with parameterized queries. In situations where
+    dynamic queries must be created, never use direct user input, but instead use a map or
+    dictionary of valid values and resolve them using a user supplied key.
+
+    For example, some database drivers do not allow parameterized queries for `>` or `<` comparison
+    operators. In these cases, do not use a user supplied `>` or `<` value, but rather have the
+    user
+    supply a `gt` or `lt` value. The alphabetical values are then used to look up the `>` and `<`
+    values to be used in the construction of the dynamic query. The same goes for other queries
+    where
+    column or table names are required but cannot be parameterized.
+
+    Example using `PreparedStatement` queries:
+    ```
+    // Some userInput
+    String userInput = "someUserInput";
+    // Your connection string
+    String url = "...";
+    // Get a connection from the DB via the DriverManager
+    Connection conn = DriverManager.getConnection(url);
+    // Create a prepared statement
+    PreparedStatement st = conn.prepareStatement("SELECT name FROM table where name=?");
+    // Set each parameters value by the index (starting from 1)
+    st.setString(1, userInput);
+    // Execute query and get the result set
+    ResultSet rs = st.executeQuery();
+    // Iterate over results
+    while (rs.next()) {
+        // Get result for this row at the provided column number (starting from 1)
+        String result = rs.getString(1);
+        // ...
+    }
+    // Close the ResultSet
+    rs.close();
+    // Close the PreparedStatement
+    st.close();
+    ```
+
+    For more information on SQL Injection see OWASP:
+    https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html
+  metadata:
+    shortDescription: "Improper Neutralization of Special Elements used in an SQL
+      Command ('SQL Injection')"
+    category: "security"
+    cwe: "CWE-89"
+  patterns:
+  - pattern-not-inside: |
+      final String $ARG = ...;
+      ...
+  - pattern-not-inside: |
+      class $CLAZZ {
+        ...
+        final String $ARG = ...;
+        ...
+      }
+  - pattern-either:
+    - patterns:
+      - pattern: "(javax.jdo.PersistenceManager $PM).newQuery($ARG)"
+      - pattern-not: "(javax.jdo.PersistenceManager $PM).newQuery(\"...\")"
+    - patterns:
+      - pattern: "(javax.jdo.PersistenceManager $PM).newQuery(..., $ARG)"
+      - pattern-not: "(javax.jdo.PersistenceManager $PM).newQuery(..., \"...\")"
+    - patterns:
+      - pattern: "(javax.jdo.Query $Q).setFilter($ARG)"
+      - pattern-not: "(javax.jdo.Query $Q).setFilter(\"...\")"
+    - patterns:
+      - pattern: "(javax.jdo.Query $Q).setGrouping($ARG)"
+      - pattern-not: "(javax.jdo.Query $Q).setGrouping(\"...\")"
+    - patterns:
+      - pattern: "(javax.jdo.Query $Q).setGrouping($ARG)"
+      - pattern-not: "(javax.jdo.Query $Q).setGrouping(\"...\")"
+    - patterns:
+      - pattern: "org.hibernate.criterion.Restrictions.sqlRestriction($ARG, ...)"
+      - pattern-not: "org.hibernate.criterion.Restrictions.sqlRestriction(\"...\",
+          ...)"
+    - patterns:
+      - pattern: "(org.hibernate.Session $S).createQuery((String $ARG), ...)"
+      - pattern-not: "(org.hibernate.Session $S).createQuery(\"...\", ...)"
+    - patterns:
+      - pattern: "(org.hibernate.Session $S).createSQLQuery($ARG, ...)"
+      - pattern-not: "(org.hibernate.Session $S).createSQLQuery(\"...\", ...)"
+    - patterns:
+      - pattern: "(java.sql.Statement $S).executeQuery($ARG, ...)"
+      - pattern-not: "(java.sql.Statement $S).createSQLQuery(\"...\", ...)"
+    - patterns:
+      - pattern: "(java.sql.Statement $S).execute($ARG, ...)"
+      - pattern-not: "(java.sql.Statement $S).execute(\"...\", ...)"
+    - patterns:
+      - pattern: "(java.sql.Statement $S).executeUpdate($ARG, ...)"
+      - pattern-not: "(java.sql.Statement $S).executeUpdate(\"...\", ...)"
+    - patterns:
+      - pattern: "(java.sql.Statement $S).executeLargeUpdate($ARG, ...)"
+      - pattern-not: "(java.sql.Statement $S).executeLargeUpdate(\"...\", ...)"
+    - patterns:
+      - pattern: "(java.sql.Statement $S).addBatch($ARG, ...)"
+      - pattern-not: "(java.sql.Statement $S).addBatch(\"...\", ...)"
+    - patterns:
+      - pattern: "(java.sql.PreparedStatement $S).executeQuery($ARG, ...)"
+      - pattern-not: "(java.sql.PreparedStatement $S).executeQuery(\"...\", ...)"
+    - patterns:
+      - pattern: "(java.sql.PreparedStatement $S).execute($ARG, ...)"
+      - pattern-not: "(java.sql.PreparedStatement $S).execute(\"...\", ...)"
+    - patterns:
+      - pattern: "(java.sql.PreparedStatement $S).executeUpdate($ARG, ...)"
+      - pattern-not: "(java.sql.PreparedStatement $S).executeUpdate(\"...\", ...)"
+    - patterns:
+      - pattern: "(java.sql.PreparedStatement $S).executeLargeUpdate($ARG, ...)"
+      - pattern-not: "(java.sql.PreparedStatement $S).executeLargeUpdate(\"...\",
+          ...)"
+    - patterns:
+      - pattern: "(java.sql.PreparedStatement $S).addBatch($ARG, ...)"
+      - pattern-not: "(java.sql.PreparedStatement $S).addBatch(\"...\", ...)"
+    - patterns:
+      - pattern: "(java.sql.Connection $S).prepareCall($ARG, ...)"
+      - pattern-not: "(java.sql.Connection $S).prepareCall(\"...\", ...)"
+    - patterns:
+      - pattern: "(java.sql.Connection $S).prepareStatement($ARG, ...)"
+      - pattern-not: "(java.sql.Connection $S).prepareStatement(\"...\", ...)"
+    - patterns:
+      - pattern: "(java.sql.Connection $S).nativeSQL($ARG, ...)"
+      - pattern-not: "(java.sql.Connection $S).nativeSQL(\"...\", ...)"
+    - patterns:
+      - pattern: "new org.springframework.jdbc.core.PreparedStatementCreatorFactory($ARG,
+          ...)"
+      - pattern-not: "new org.springframework.jdbc.core.PreparedStatementCreatorFactory(\"...\",
+          ...)"
+    - patterns:
+      - pattern: "(org.springframework.jdbc.core.PreparedStatementCreatorFactory $F).newPreparedStatementCreator($ARG,
+          ...)"
+      - pattern-not: "(org.springframework.jdbc.core.PreparedStatementCreatorFactory
+          $F).newPreparedStatementCreator(\"...\", ...)"
+    - patterns:
+      - pattern: "(org.springframework.jdbc.core.JdbcOperations $O).batchUpdate($ARG,
+          ...)"
+      - pattern-not: "(org.springframework.jdbc.core.JdbcOperations $O).batchUpdate(\"...\",
+          ...)"
+    - patterns:
+      - pattern: "(org.springframework.jdbc.core.JdbcOperations $O).execute($ARG,
+          ...)"
+      - pattern-not: "(org.springframework.jdbc.core.JdbcOperations $O).execute(\"...\",
+          ...)"
+    - patterns:
+      - pattern: "(org.springframework.jdbc.core.JdbcOperations $O).query($ARG, ...)"
+      - pattern-not: "(org.springframework.jdbc.core.JdbcOperations $O).query(\"...\",
+          ...)"
+    - patterns:
+      - pattern: "(org.springframework.jdbc.core.JdbcOperations $O).queryForList($ARG,
+          ...)"
+      - pattern-not: "(org.springframework.jdbc.core.JdbcOperations $O).queryForList(\"...\",
+          ...)"
+    - patterns:
+      - pattern: "(org.springframework.jdbc.core.JdbcOperations $O).queryForMap($ARG,
+          ...)"
+      - pattern-not: "(org.springframework.jdbc.core.JdbcOperations $O).queryForMap(\"...\",
+          ...)"
+    - patterns:
+      - pattern: "(org.springframework.jdbc.core.JdbcOperations $O).queryForObject($ARG,
+          ...)"
+      - pattern-not: "(org.springframework.jdbc.core.JdbcOperations $O).queryForObject(\"...\",
+          ...)"
+    - patterns:
+      - pattern: "(org.springframework.jdbc.core.JdbcOperations $O).queryForObject($ARG,
+          ...)"
+      - pattern-not: "(org.springframework.jdbc.core.JdbcOperations $O).queryForObject(\"...\",
+          ...)"
+    - patterns:
+      - pattern: "(org.springframework.jdbc.core.JdbcOperations $O).queryForRowSet($ARG,
+          ...)"
+      - pattern-not: "(org.springframework.jdbc.core.JdbcOperations $O).queryForRowSet(\"...\",
+          ...)"
+    - patterns:
+      - pattern: "(org.springframework.jdbc.core.JdbcOperations $O).queryForInt($ARG,
+          ...)"
+      - pattern-not: "(org.springframework.jdbc.core.JdbcOperations $O).queryForInt(\"...\",
+          ...)"
+    - patterns:
+      - pattern: "(org.springframework.jdbc.core.JdbcOperations $O).queryForLong($ARG,
+          ...)"
+      - pattern-not: "(org.springframework.jdbc.core.JdbcOperations $O).queryForLong(\"...\",
+          ...)"
+    - patterns:
+      - pattern: "(org.springframework.jdbc.core.JdbcOperations $O).update($ARG, ...)"
+      - pattern-not: "(org.springframework.jdbc.core.JdbcOperations $O).update(\"...\",
+          ...)"
+    - patterns:
+      - pattern: "(org.springframework.jdbc.core.JdbcTemplate $O).batchUpdate($ARG,
+          ...)"
+      - pattern-not: "(org.springframework.jdbc.core.JdbcTemplate $O).batchUpdate(\"...\",
+          ...)"
+    - patterns:
+      - pattern: "(org.springframework.jdbc.core.JdbcTemplate $O).execute($ARG, ...)"
+      - pattern-not: "(org.springframework.jdbc.core.JdbcTemplate $O).execute(\"...\",
+          ...)"
+    - patterns:
+      - pattern: "(org.springframework.jdbc.core.JdbcTemplate $O).query($ARG, ...)"
+      - pattern-not: "(org.springframework.jdbc.core.JdbcTemplate $O).query(\"...\",
+          ...)"
+    - patterns:
+      - pattern: "(org.springframework.jdbc.core.JdbcTemplate $O).queryForList($ARG,
+          ...)"
+      - pattern-not: "(org.springframework.jdbc.core.JdbcTemplate $O).queryForList(\"...\",
+          ...)"
+    - patterns:
+      - pattern: "(org.springframework.jdbc.core.JdbcTemplate $O).queryForMap($ARG,
+          ...)"
+      - pattern-not: "(org.springframework.jdbc.core.JdbcTemplate $O).queryForMap(\"...\",
+          ...)"
+    - patterns:
+      - pattern: "(org.springframework.jdbc.core.JdbcTemplate $O).queryForObject($ARG,
+          ...)"
+      - pattern-not: "(org.springframework.jdbc.core.JdbcTemplate $O).queryForObject(\"...\",
+          ...)"
+    - patterns:
+      - pattern: "(org.springframework.jdbc.core.JdbcTemplate $O).queryForRowSet($ARG,
+          ...)"
+      - pattern-not: "(org.springframework.jdbc.core.JdbcTemplate $O).queryForRowSet(\"...\",
+          ...)"
+    - patterns:
+      - pattern: "(org.springframework.jdbc.core.JdbcTemplate $O).queryForInt($ARG,
+          ...)"
+      - pattern-not: "(org.springframework.jdbc.core.JdbcTemplate $O).queryForInt(\"...\",
+          ...)"
+    - patterns:
+      - pattern: "(org.springframework.jdbc.core.JdbcTemplate $O).queryForLong($ARG,
+          ...)"
+      - pattern-not: "(org.springframework.jdbc.core.JdbcTemplate $O).queryForLong(\"...\",
+          ...)"
+    - patterns:
+      - pattern: "(org.springframework.jdbc.core.JdbcTemplate $O).update($ARG, ...)"
+      - pattern-not: "(org.springframework.jdbc.core.JdbcTemplate $O).update(\"...\",
+          ...)"
+    - patterns:
+      - pattern: "(io.vertx.sqlclient.SqlClient $O).query($ARG, ...)"
+      - pattern-not: "(io.vertx.sqlclient.SqlClient $O).query(\"...\", ...)"
+    - patterns:
+      - pattern: "(io.vertx.sqlclient.SqlClient $O).preparedQuery($ARG, ...)"
+      - pattern-not: "(io.vertx.sqlclient.SqlClient $O).preparedQuery(\"...\", ...)"
+    - patterns:
+      - pattern: "(io.vertx.sqlclient.SqlConnection $O).prepare($ARG, ...)"
+      - pattern-not: "(io.vertx.sqlclient.SqlConnection $O).prepare(\"...\", ...)"
+    - patterns:
+      - pattern: "(org.apache.turbine.om.peer.BasePeer $O).executeQuery($ARG, ...)"
+      - pattern-not: "(org.apache.turbine.om.peer.BasePeer $O).executeQuery(\"...\",
+          ...)"
+    - patterns:
+      - pattern: "(org.apache.torque.util.BasePeer $O).executeQuery($ARG, ...)"
+      - pattern-not: "(org.apache.torque.util.BasePeer $O).executeQuery(\"...\", ...)"
+    - patterns:
+      - pattern: "(javax.persistence.EntityManager $O).createQuery($ARG, ...)"
+      - pattern-not: "(javax.persistence.EntityManager $O).createQuery(\"...\", ...)"
+    - patterns:
+      - pattern: "(javax.persistence.EntityManager $O).createNativeQuery($ARG, ...)"
+      - pattern-not: "(javax.persistence.EntityManager $O).createNativeQuery(\"...\",
+          ...)"
+  severity: "ERROR"

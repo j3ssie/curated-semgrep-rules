@@ -1,0 +1,46 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_smtp_rule-SmtpClient"
+  languages:
+  - "scala"
+  message: |
+    Simple Mail Transfer Protocol (SMTP) is a the text based protocol used for
+    email delivery. Like with HTTP, headers are separate by new line separator. If
+    kuser input is place in a header line, the application should remove or replace
+    new line characters (CR / LF). You should use a safe wrapper such as Apache
+    Common Email and Simple Java Mail which filter special characters that can lead
+    to header injection.
+  metadata:
+    category: "security"
+    cwe: "CWE-77"
+    shortDescription: "Improper Neutralization of Special Elements used in a Command"
+  patterns:
+  - pattern-either:
+    - patterns:
+      - pattern-inside: |
+          $M = new MimeMessage(...);
+          ...
+      - pattern: "$M.setSubject($ARG);"
+      - pattern-not: "$M.setSubject(\"...\")"
+    - patterns:
+      - pattern-inside: |
+          $M = new MimeMessage(...);
+          ...
+      - pattern: "$M.addHeader($ARG1, $ARG2)"
+      - pattern-not: "$M.addHeader(\"...\", \"...\")"
+    - patterns:
+      - pattern-inside: |
+          $M = new MimeMessage(...);
+          ...
+      - pattern: "$M.setDescription($ARG)"
+      - pattern-not: "$M.setDescription(\"...\")"
+    - patterns:
+      - pattern-inside: |
+          $M = new MimeMessage(...);
+          ...
+      - pattern: "$M.setDisposition($ARG)"
+      - pattern-not: "$M.setDisposition(\"...\")"
+  severity: "ERROR"

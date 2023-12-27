@@ -1,0 +1,32 @@
+# yamllint disable
+# The ruleset is generated from flawfinder official rule repository hosted on github.
+# License: GPL 2.0 (c) 1989, 1991 Free Software Foundation, Inc.
+# source: https://github.com/david-a-wheeler/flawfinder/blob/e0d8827c3b714a883ce8036edc832721f4619524/flawfinder.py
+# yamllint enable
+---
+rules:
+- id: "c_buffer_rule-sprintf-vsprintf"
+  languages:
+  - "c"
+  message: |
+    Use sprintf_s, snprintf, or vsnprintf instead. The `sprintf` family of functions do not allow
+    callers to set limits on how many bytes the destination buffer can hold. Consider using more
+    secure alternatives such as `snprintf`.
+
+    For more information please see: https://linux.die.net/man/3/snprintf
+
+    If developing for C Runtime Library (CRT), more secure versions of these functions should be
+    used, see:
+    https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/sprintf-s-sprintf-s-l-swprintf-s-swprintf-s-l?view=msvc-170
+  metadata:
+    shortDescription: "Insecure function unable to limit / check buffer sizes"
+    cwe: "CWE-120"
+    owasp: "A1:2017-Injection"
+  pattern-either:
+  - pattern: "sprintf(...)"
+  - pattern: "vsprintf(...)"
+  - pattern: "swprintf(...)"
+  - pattern: "vswprintf(...)"
+  - pattern: "_stprintf(...)"
+  - pattern: "_vstprintf(...)"
+  severity: "ERROR"

@@ -1,0 +1,38 @@
+# yamllint disable
+# The ruleset is generated from flawfinder official rule repository hosted on github.
+# License: GPL 2.0 (c) 1989, 1991 Free Software Foundation, Inc.
+# source: https://github.com/david-a-wheeler/flawfinder/blob/e0d8827c3b714a883ce8036edc832721f4619524/flawfinder.py
+# yamllint enable
+---
+rules:
+- id: "c_buffer_rule-realpath"
+  languages:
+  - "c"
+  message: |
+    The `realpath` function should not be called with a destination buffer as it could
+    lead to overflowing if the path is greater than PATH_LEN. It is instead recommended
+    to call `realpath` with the destination buffer set to NULL and use the return value
+    as the resolved path. Be sure to free the returned pointer as realpath will allocate
+    the buffer internally using `malloc`.
+
+    For more information see: https://linux.die.net/man/3/realpath
+
+    Example:
+
+    ```
+    char const *symlink_path = "/tmp/symlink";
+    char *resolved_path = NULL;
+
+    resolved_path = realpath(symlink_path, NULL);
+    if (errno == 0) {
+      // ... use resolved_path...
+      free(resolved_path);
+    }
+    ```
+  metadata:
+    shortDescription: "Function does not ensure destination buffer length is sufficient
+      before copying"
+    cwe: "CWE-120"
+    owasp: "A1:2017-Injection"
+  pattern: "realpath(...)"
+  severity: "WARNING"

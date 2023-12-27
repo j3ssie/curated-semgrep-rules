@@ -1,0 +1,17 @@
+rules:
+  - id: class-extends-action-support
+    message: >-
+      Struts2 Action Handler class $CLASS extends ActionSupport
+    severity: INFO
+    languages: [java]
+    metadata:
+      category: security
+      subcategory: audit
+      likelihood: LOW
+      impact: LOW
+      confidence: LOW
+      technology:
+        - JVM
+        - Struts2
+    pattern: |
+      class $CLASS extends ActionSupport

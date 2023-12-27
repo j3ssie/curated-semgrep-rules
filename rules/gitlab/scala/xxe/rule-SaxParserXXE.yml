@@ -1,0 +1,30 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_xxe_rule-SaxParserXXE"
+  languages:
+  - "scala"
+  message: |
+    XML External Entity (XXE) attacks can occur when an XML parser supports XML
+    entities while processing XML received from an untrusted source.
+  metadata:
+    category: "security"
+    cwe: "CWE-611"
+    shortDescription: "Improper Restriction of XML External Entity Reference ('XXE')"
+  patterns:
+  - pattern-inside: |
+      val $SF = SAXParserFactory.newInstance
+      ...
+  - pattern-not-inside: |
+      $SF.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true)
+      ...
+  - pattern-not-inside: |
+      $SF.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
+      ...
+  - pattern-inside: |
+      val $P = $SFP.newSAXParser
+      ...
+  - pattern: "$P.parse(...);"
+  severity: "ERROR"

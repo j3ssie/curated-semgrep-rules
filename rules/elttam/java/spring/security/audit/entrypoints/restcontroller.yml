@@ -1,0 +1,23 @@
+rules:
+  - id: rest-RestController
+    message: >-
+      RestController $CLASS
+    severity: INFO
+    languages: [java]
+    metadata:
+      docs: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/bind/annotation/RestController.html
+      category: security
+      subcategory: audit
+      likelihood: LOW
+      impact: LOW
+      confidence: LOW
+      technology:
+        - spring
+        - spring-framework
+    pattern-either:
+      - pattern: |
+          @org.springframework.web.bind.annotation.RestController(...)
+          class $CLASS
+      - pattern: |
+          @RestController(...)
+          class $CLASS

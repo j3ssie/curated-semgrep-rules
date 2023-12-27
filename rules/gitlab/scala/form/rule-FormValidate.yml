@@ -1,0 +1,25 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_form_rule-FormValidate"
+  languages:
+  - "scala"
+  message: |
+    Form inputs should have minimal input validation. Preventive validation helps provide defense
+    in depth against a variety of risks.
+  metadata:
+    category: "security"
+    cwe: "CWE-20"
+    shortDescription: "Improper Input Validation"
+  patterns:
+  - pattern-inside: |
+      class $CLASS extends $SC {
+        ...
+      }
+  - metavariable-regex:
+      metavariable: "$SC"
+      regex: "(ActionForm|ValidatorForm)"
+  - pattern-not: "public void validate() { ... }"
+  severity: "WARNING"

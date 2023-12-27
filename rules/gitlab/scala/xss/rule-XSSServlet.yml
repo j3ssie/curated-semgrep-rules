@@ -1,0 +1,42 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_xss_rule-XSSServlet"
+  languages:
+  - "scala"
+  message: |
+    A potential XSS was found. It could be used to execute unwanted JavaScript in a
+    client's browser.
+  metadata:
+    category: "security"
+    cwe: "CWE-79"
+    shortDescription: "Improper Neutralization of Input During Web Page Generation
+      ('Cross-site Scripting')"
+  mode: "taint"
+  pattern-sanitizers:
+  - patterns:
+    - pattern-inside: |-
+        org.owasp.encoder.Encode.forHtml($TAINTED);
+    - pattern: "$TAINTED"
+  pattern-sinks:
+  - patterns:
+    - pattern-inside: |-
+        def $FUNC(..., $RES: HttpServletResponse, ...): $TYPE = {...}
+    - pattern-inside: |
+        $WRITER = $RES.getWriter;
+        ...
+    - pattern: "$WRITER.write($DATA,...);"
+    - pattern: "$DATA"
+  - patterns:
+    - pattern-inside: |-
+        def $FUNC(..., $RES: HttpServletResponse, ...): $TYPE = {...}
+    - pattern: "$RES.getWriter.write($DATA,...);"
+    - pattern: "$DATA"
+  pattern-sources:
+  - patterns:
+    - pattern-inside: |-
+        def $FUNC(..., $REQ: HttpServletRequest, ...): $TYPE = {...}
+    - pattern: "$REQ.getParameter(...);"
+  severity: "WARNING"

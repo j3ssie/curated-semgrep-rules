@@ -1,0 +1,72 @@
+# yamllint disable
+# License: GNU Lesser General Public License v3.0
+# source (original): https://github.com/ajinabraham/njsscan/blob/master/njsscan/rules/semantic_grep/eval/eval_vm_injection.yaml
+# hash: e7a0a61
+# yamllint enable
+---
+rules:
+- id: "rules_lgpl_javascript_eval_rule-vm-runinnewcontext-injection"
+  patterns:
+  - pattern-inside: |
+      require('vm')
+      ...
+  - pattern-either:
+    - pattern-inside: |-
+        function ($REQ, $RES, ...) {...}
+    - pattern-inside: |-
+        function $FUNC($REQ, $RES, ...) {...}
+    - pattern-inside: |-
+        $X = function $FUNC($REQ, $RES, ...) {...}
+    - pattern-inside: |-
+        var $X = function $FUNC($REQ, $RES, ...) {...};
+    - pattern-inside: |-
+        $APP.$METHOD(..., function $FUNC($REQ, $RES, ...) {...})
+  - pattern-either:
+    - pattern: |
+        $VM.runInNewContext($CODE,<... $REQ.$QUERY.$FOO ...>,...)
+    - pattern: |
+        $CONTEXT = <... $REQ.$QUERY.$FOO ...>;
+        ...
+        $VM.runInNewContext($CODE,<... $CONTEXT ...>,...)
+    - pattern: |
+        $CONTEXT = {$NAME: <... $REQ.$QUERY.$FOO ...>};
+        ...
+        $VM.runInNewContext($CODE,<... $CONTEXT ...>,...)
+    - pattern: |
+        $CONTEXT = <... {$NAME:$REQ.$QUERY.$FOO} ...>;
+        ...
+        $VM.runInNewContext($CODE,<... $CONTEXT ...>,...)
+    - pattern: |
+        $VAR = <... $REQ.$QUERY.$FOO ...>;
+        ...
+        $CONTEXT = {$NAME: <... $VAR ...>};
+        ...
+        $VM.runInNewContext($CODE,<... $CONTEXT ...>,...)
+    - pattern: |
+        $VM.runInNewContext($CODE,<... $REQ.$BODY ...>,...)
+    - pattern: |
+        $CONTEXT = <... $REQ.$BODY ...>;
+        ...
+        $VM.runInNewContext($CODE,<... $CONTEXT ...>,...)
+    - pattern: |
+        $CONTEXT = {$NAME: <... $REQ.$BODY ...>};
+        ...
+        $VM.runInNewContext($CODE,<... $CONTEXT ...>,...)
+    - pattern: |
+        $CONTEXT = <... {$NAME:$REQ.$BODY} ...>;
+        ...
+        $VM.runInNewContext($CODE,<... $CONTEXT ...>,...)
+    - pattern: |
+        $VAR = <... $REQ.$BODY ...>;
+        ...
+        $CONTEXT = {$NAME: <... $VAR ...>};
+        ...
+        $VM.runInNewContext($CODE,<... $CONTEXT ...>,...)
+  message: |
+    Untrusted user input in `vm.runInNewContext()` can result in code injection.
+  severity: "ERROR"
+  languages:
+  - "javascript"
+  metadata:
+    owasp: "A1:2017-Injection"
+    cwe: "CWE-94: Improper Control of Generation of Code (Code Injection)"

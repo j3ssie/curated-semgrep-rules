@@ -1,0 +1,4 @@
+[codespell]
+regex = (?:(?:[a-z']{2,})|(?:[A-Z][a-z]+)|(?:[A-Z]{2,}(?![a-z])))
+ignore-words = .codespellignore
+builtin = clear,rare,en-GB_to_en-US

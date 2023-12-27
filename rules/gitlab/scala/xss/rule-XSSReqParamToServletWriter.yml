@@ -1,0 +1,44 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_xss_rule-XSSReqParamToServletWriter"
+  languages:
+  - "scala"
+  message: |
+    Servlet reflected cross site scripting vulnerability
+  metadata:
+    category: "security"
+    cwe: "CWE-79"
+    shortDescription: "Improper Neutralization of Input During Web Page Generation"
+    technology:
+    - "scala"
+  mode: "taint"
+  pattern-sanitizers:
+  - pattern: "Encode.forHtml(...)"
+  - pattern: "org.owasp.esapi.Encoder.encodeForSQL(...)"
+  pattern-sinks:
+  - patterns:
+    - pattern-inside: |-
+        def $FUNC(..., $RES: HttpServletResponse, ...): $TYPE = {...}
+    - pattern-inside: |
+        $WRITER = $RES.getWriter
+        ...
+    - pattern: "$WRITER.write(...)"
+  - patterns:
+    - pattern-inside: |-
+        def $FUNC(..., $RES: HttpServletResponse, ...): $TYPE = {...}
+    - pattern: "$RES.getWriter.write(...)"
+  - patterns:
+    - pattern-inside: |-
+        def $FUNC(..., $RES: HttpServletResponse, ...): $TYPE = {...}
+    - pattern: "$RES.getWriter.print(...)"
+  pattern-sources:
+  - patterns:
+    - pattern-inside: |-
+        def $FUNC(..., $REQ: HttpServletRequest, ...): $TYPE = {...}
+    - pattern-either:
+      - pattern: "$REQ.getParameter(...)"
+      - pattern: "$REQ.getQueryString"
+  severity: "WARNING"

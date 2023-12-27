@@ -1,0 +1,43 @@
+# yamllint disable
+# License: Apache 2.0 (c) gosec
+# source (original): https://github.com/securego/gosec/blob/master/rules/rsa.go
+# yamllint enable
+---
+rules:
+- id: "go_crypto_rule-weakkeystrength"
+  languages:
+  - "go"
+  patterns:
+  - pattern-either:
+    - pattern: |
+        rsa.GenerateKey(..., $ARG)
+  - metavariable-comparison:
+      metavariable: "$ARG"
+      comparison: "$ARG < 2048"
+  message: |
+    The application is generating an RSA key that is less than the recommended 2048 bits.
+    The National Institute of Standards and Technology (NIST) deprecated signing Digital
+    Certificates that contained RSA Public Keys of 1024 bits in December 2010. While
+    1024-bit RSA keys have not been factored yet, advances in compute may make it possible
+    in the near future.
+
+    To generate an RSA key of 2048 pass the number of bits as the second parameter to
+    the `rsa.GenerateKey` function:
+    ```
+    import (
+      "crypto/rand"
+      "crypto/rsa"
+    )
+
+    func generate() {
+      key, err := rsa.GenerateKey(rand.Reader, 2048)
+      if err != nil {
+        log.Fatal(err)
+      }
+    }
+    ```
+  metadata:
+    shortDescription: "Inadequate encryption strength"
+    cwe: "CWE-326"
+    owasp: "A3:2017-Sensitive Data Exposure"
+  severity: "WARNING"

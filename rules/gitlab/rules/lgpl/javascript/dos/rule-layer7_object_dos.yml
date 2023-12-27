@@ -1,0 +1,39 @@
+# yamllint disable
+# License: GNU Lesser General Public License v3.0
+# source (original): https://github.com/ajinabraham/njsscan/blob/master/njsscan/rules/semantic_grep/dos/layer7_object_dos.yaml
+# hash: e7a0a61
+# yamllint enable
+---
+rules:
+- id: "rules_lgpl_javascript_dos_rule-layer7-object-dos"
+  patterns:
+  - pattern-either:
+    - pattern-inside: |-
+        function ($REQ, $RES, ...) {...}
+    - pattern-inside: |-
+        function $FUNC($REQ, $RES, ...) {...}
+    - pattern-inside: |-
+        $X = function $FUNC($REQ, $RES, ...) {...}
+    - pattern-inside: |-
+        var $X = function $FUNC($REQ, $RES, ...) {...};
+    - pattern-inside: |-
+        $APP.$METHOD(..., function $FUNC($REQ, $RES, ...) {...})
+  - pattern-either:
+    - pattern-inside: |
+        $OBJ = $REQ.body;
+        ...
+    - pattern-inside: |
+        $OBJ = $REQ.body.$FOO;
+        ...
+  - pattern-inside: |
+      for(...){...}
+  - pattern: |
+      $OBJ.length
+  message: |
+    Layer7 Denial of Service. Looping over user controlled objects can result in DoS.
+  languages:
+  - "javascript"
+  severity: "ERROR"
+  metadata:
+    owasp: "A6:2017-Security Misconfiguration"
+    cwe: "CWE-400: Uncontrolled Resource Consumption"

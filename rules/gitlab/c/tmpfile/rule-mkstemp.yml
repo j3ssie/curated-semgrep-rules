@@ -1,0 +1,25 @@
+# yamllint disable
+# The ruleset is generated from flawfinder official rule repository hosted on github.
+# License: GPL 2.0 (c) 1989, 1991 Free Software Foundation, Inc.
+# source: https://github.com/david-a-wheeler/flawfinder/blob/e0d8827c3b714a883ce8036edc832721f4619524/flawfinder.py
+# yamllint enable
+---
+rules:
+- id: "c_tmpfile_rule-mkstemp"
+  languages:
+  - "c"
+  message: |
+    Some older Unix-like systems, `mkstemp` would create temp files with 0666 permissions,
+    meaning the file created would be read/write access for all users.
+
+    Ensure the process has called the `umask` function with restricted permissions prior
+    to calling `mkstemp` and validate the permissions prior to using the file descriptor.
+
+    For more information on temporary files please see:
+    https://wiki.sei.cmu.edu/confluence/pages/viewpage.action?pageId=87152425
+  metadata:
+    shortDescription: "Potential file permissions issue (mkstemp)"
+    cwe: "CWE-377"
+    owasp: "A5:2017-Broken Access Control"
+  pattern: "mkstemp(...)"
+  severity: "INFO"

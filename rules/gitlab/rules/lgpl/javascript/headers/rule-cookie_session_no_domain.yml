@@ -1,0 +1,55 @@
+# yamllint disable
+# License: GNU Lesser General Public License v3.0
+# source (original): https://github.com/ajinabraham/njsscan/blob/master/njsscan/rules/semantic_grep/headers/header_cookie.yaml
+# hash: e7a0a61
+# yamllint enable
+---
+rules:
+- id: "rules_lgpl_javascript_headers_rule-cookie-session-no-domain"
+  patterns:
+  - pattern-either:
+    - pattern-inside: |
+        $SESSION = require('cookie-session')
+        ...
+    - pattern-inside: |
+        $SESSION = require('express-session')
+        ...
+  - pattern: "$SESSION(...)"
+  - pattern-not-inside: |-
+      $SESSION(<... {cookie:{domain:...}} ...>,...)
+  - pattern-not-inside: |
+      $OPTS = <... {cookie:{domain:...}} ...>;
+      ...
+      $SESSION($OPTS,...)
+  - pattern-not-inside: |
+      $OPTS = ...;
+      ...
+      $COOKIE = <... {domain:...} ...>;
+      ...
+      $SESSION($OPTS,...)
+  - pattern-not-inside: |
+      $OPTS = ...;
+      ...
+      $OPTS.cookie = <... {domain:...} ...>;
+      ...
+      $SESSION($OPTS,...)
+  - pattern-not-inside: |
+      $OPTS = ...;
+      ...
+      $COOKIE.domain = ...;
+      ...
+      $SESSION($OPTS,...)
+  - pattern-not-inside: |
+      $OPTS = ...;
+      ...
+      $OPTS.cookie.domain = ...;
+      ...
+      $SESSION($OPTS,...)
+  message: |
+    'Default session middleware settings: `domain` not set. It indicates the domain of the cookie; use it to compare against the domain of the server in which the URL is being requested. If they match, then check the path attribute next.'
+  severity: "INFO"
+  languages:
+  - "javascript"
+  metadata:
+    owasp: "A2:2017-Broken Authentication"
+    cwe: "CWE-522: Insufficiently Protected Credentials"

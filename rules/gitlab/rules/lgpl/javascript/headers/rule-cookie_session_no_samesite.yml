@@ -1,0 +1,87 @@
+# yamllint disable
+# License: GNU Lesser General Public License v3.0
+# source (original): https://github.com/ajinabraham/njsscan/blob/master/njsscan/rules/semantic_grep/headers/header_cookie.yaml
+# hash: e7a0a61
+# yamllint enable
+---
+rules:
+- id: "rules_lgpl_javascript_headers_rule-cookie-session-no-samesite"
+  patterns:
+  - pattern-either:
+    - pattern-inside: |
+        $SESSION = require('cookie-session')
+        ...
+    - pattern-inside: |
+        $SESSION = require('express-session')
+        ...
+  - pattern: "$SESSION(...)"
+  - pattern-not-inside: |-
+      $SESSION(<... {cookie:{sameSite:true}} ...>,...)
+  - pattern-not-inside: |-
+      $SESSION(<... {cookie:{sameSite:'lax'}} ...>,...)
+  - pattern-not-inside: |-
+      $SESSION(<... {cookie:{sameSite:'strict'}} ...>,...)
+  - pattern-not-inside: |
+      $OPTS = <... {cookie:{sameSite:true}} ...>;
+      ...
+      $SESSION($OPTS,...)
+  - pattern-not-inside: |
+      $OPTS = ...;
+      ...
+      $COOKIE = <... {sameSite:true} ...>;
+      ...
+      $SESSION($OPTS,...)
+  - pattern-not-inside: |
+      $OPTS = ...;
+      ...
+      $OPTS.cookie = <... {sameSite:true} ...>;
+      ...
+      $SESSION($OPTS,...)
+  - pattern-not-inside: |
+      $OPTS = ...;
+      ...
+      $COOKIE.sameSite = true;
+      ...
+      $SESSION($OPTS,...)
+  - pattern-not-inside: |
+      $OPTS = ...;
+      ...
+      $OPTS.cookie.sameSite = true;
+      ...
+      $SESSION($OPTS,...)
+  - pattern-not-inside: |
+      $OPTS = <... {cookie:{sameSite:'strict'}} ...>;
+      ...
+      $SESSION($OPTS,...)
+  - pattern-not-inside: |
+      $OPTS = ...;
+      ...
+      $COOKIE = <... {sameSite:'strict'} ...>;
+      ...
+      $SESSION($OPTS,...)
+  - pattern-not-inside: |
+      $OPTS = ...;
+      ...
+      $OPTS.cookie = <... {sameSite:'strict'} ...>;
+      ...
+      $SESSION($OPTS,...)
+  - pattern-not-inside: |
+      $OPTS = ...;
+      ...
+      $COOKIE.sameSite = 'strict';
+      ...
+      $SESSION($OPTS,...)
+  - pattern-not-inside: |
+      $OPTS = ...;
+      ...
+      $OPTS.cookie.sameSite = 'strict';
+      ...
+      $SESSION($OPTS,...)
+  message: |
+    'Default session middleware settings: `sameSite` attribute is not configured to strict or lax. These configurations provides protection against Cross Site Request Forgery attacks.'
+  severity: "WARNING"
+  languages:
+  - "javascript"
+  metadata:
+    owasp: "A2:2017-Broken Authentication"
+    cwe: "CWE-1275: Sensitive Cookie with Improper SameSite Attribute"

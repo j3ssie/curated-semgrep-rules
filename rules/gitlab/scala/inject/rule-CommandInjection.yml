@@ -1,0 +1,68 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_inject_rule-CommandInjection"
+  languages:
+  - "scala"
+  message: |
+    The highlighted API is used to execute a system command. If unfiltered input is passed to this
+    API, it can lead to arbitrary command execution.
+  metadata:
+    category: "security"
+    cwe: "CWE-78"
+    shortDescription: "Improper Neutralization of Special Elements used in an OS Command
+      ('OS Command Injection')"
+    technology:
+    - "scala"
+  pattern-either:
+  - patterns:
+    - pattern-inside: |
+        def $FUNC(..., $PARAM: String, ...): $TYPE = {
+          ...
+        }
+    - pattern-inside: |
+        val $RT = Runtime.getRuntime
+        ...
+    - pattern-either:
+      - pattern: "$RT.exec($PARAM)"
+      - pattern: |
+          var $CMDARR = new Array[String]("$SHELL",...,$PARAM,...)
+          ...
+          $RT.exec($CMDARR,...)
+      - pattern: "$RT.exec(Array[String](\"$SHELL\",...,$PARAM,...), ...)"
+      - pattern: "$RT.exec(java.util.String.format(\"...\", ...,$PARAM,...))"
+      - pattern: "$RT.exec(($A: String) + ($B: String))"
+    - metavariable-regex:
+        metavariable: "$SHELL"
+        regex: "(/.../)?(sh|bash|ksh|csh|tcsh|zsh)$"
+    - pattern-not: "$RT.exec(\"...\",\"...\",\"...\",...)"
+    - pattern-not: "$RT.exec(new Array[String](\"...\",\"...\",\"...\",...),...)"
+  - patterns:
+    - pattern-inside: |
+        def $FUNC(...,$PARAM: String, ...): $TYPE = {
+          ...
+        }
+    - pattern-inside: |
+        val $PB = new ProcessBuilder()
+        ...
+    - pattern-either:
+      - pattern: "$PB.command($PARAM,...)"
+      - patterns:
+        - pattern-either:
+          - pattern: "$PB.command(\"$SHELL\",...,$PARAM,...)"
+          - pattern: |
+              var $CMDARR = java.util.Arrays.asList("$SHELL",...,$PARAM,...)
+              ...
+              $PB.command($CMDARR,...)
+          - pattern: "$PB.command(java.util.Arrays.asList(\"$SHELL\",...,$PARAM,...),...)"
+          - pattern: "$PB.command(java.util.String.format(\"...\", ...,$PARAM,...))"
+          - pattern: "$PB.command(($A: String) + ($B: String))"
+        - metavariable-regex:
+            metavariable: "$SHELL"
+            regex: "(/.../)?(sh|bash|ksh|csh|tcsh|zsh)$"
+    - pattern-not: "$PB.command(\"...\",\"...\",\"...\",...)"
+    - pattern-not: |
+        $PB.command(java.util.Arrays.asList("...","...","...",...))
+  severity: "WARNING"

@@ -1,0 +1,19 @@
+# yamllint disable
+# License: GNU Lesser General Public License v3.0
+# source (original): https://github.com/ajinabraham/njsscan/blob/master/njsscan/rules/semantic_grep/headers/header_cors_star.yaml
+# hash: e7a0a61
+# yamllint enable
+---
+rules:
+- id: "rules_lgpl_javascript_headers_rule-generic-cors"
+  patterns:
+  - pattern: |
+      $APP.options('*', cors(...))
+  message: |
+    Access-Control-Allow-Origin response header is set to "*". This will disable CORS Same Origin Policy restrictions.
+  languages:
+  - "javascript"
+  severity: "WARNING"
+  metadata:
+    owasp: "A6:2017-Security Misconfiguration"
+    cwe: "CWE-346: Origin Validation Error"

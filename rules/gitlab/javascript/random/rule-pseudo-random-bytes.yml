@@ -1,0 +1,33 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "javascript_random_rule-pseudo-random-bytes"
+  languages:
+  - "javascript"
+  - "typescript"
+  pattern: "crypto.pseudoRandomBytes"
+  severity: "WARNING"
+  message: |
+    Depending on the context, generating weak random numbers may expose cryptographic functions,
+    which rely on these numbers, to be exploitable. When generating numbers for sensitive values
+    such as tokens, nonces, and cryptographic keys, it is recommended that the `randomBytes` method
+    of the `crypto` module be used instead of `pseudoRandomBytes`.
+
+    Example using `randomBytes`:
+    ```
+    // Generate 256 bytes of random data
+    const randomBytes = crypto.randomBytes(256);
+    ```
+
+    For more information on JavaScript Cryptography see:
+    https://nodejs.org/api/crypto.html#cryptorandombytessize-callback
+  metadata:
+    cwe: "CWE-338"
+    shortDescription: "Use of cryptographically weak pseudo-random number generator
+      (PRNG)"
+    category: "security"
+    # yamllint disable
+    source-rule-url: "https://github.com/nodesecurity/eslint-plugin-security/blob/master/rules/detect-pseudoRandomBytes.js"
+    # yamllint enable

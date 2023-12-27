@@ -1,0 +1,26 @@
+rules:
+  - id: rest-Priority
+    message: >-
+      @Priority $CLASS
+    severity: INFO
+    languages: [java]
+    metadata:
+      docs: https://docs.oracle.com/javaee/7/api/javax/annotation/Priority.html
+      similar-to: Spring @Order
+      category: security
+      subcategory: audit
+      likelihood: LOW
+      impact: LOW
+      confidence: LOW
+      technology:
+        - spring
+        - spring-framework
+    pattern-either:
+      # value parameter is mandatory
+      - pattern: |
+          @javax.annotation.Priority(...)
+          class $CLASS
+      # unqualified
+      - pattern: |
+          @Priority(...)
+          class $CLASS

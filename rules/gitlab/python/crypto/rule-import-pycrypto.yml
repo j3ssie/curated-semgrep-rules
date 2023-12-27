@@ -1,0 +1,31 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "python_crypto_rule-import-pycrypto"
+  languages:
+  - "python"
+  message: |
+    The application was detected importing `pycrypto`. This package has been deprecated as it
+    contains
+    security vulnerabilities.
+
+    To remediate this issue, consider using the [cryptography](https://cryptography.io/)
+    package instead.
+  metadata:
+    cwe: "CWE-1104"
+    owasp: "A9:2017-Using Components with Known Vulnerabilities"
+    category: "security"
+    shortDescription: "Use of unmaintained third party components"
+  pattern-either:
+  - pattern: "import pycryto"
+  - pattern: "import Crypto.Cipher"
+  - pattern: "import Crypto.Hash"
+  - pattern: "import Crypto.IO"
+  - pattern: "import Crypto.Protocol"
+  - pattern: "import Crypto.PublicKey"
+  - pattern: "import Crypto.Random"
+  - pattern: "import Crypto.Signature"
+  - pattern: "import Crypto.Util"
+  severity: "ERROR"

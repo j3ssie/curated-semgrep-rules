@@ -1,0 +1,65 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_password_rule-HardcodeKey"
+  languages:
+  - "scala"
+  message: |
+    Cryptographic keys should not be kept in the source code. The source code can be widely shared
+    in an enterprise environment, and is certainly shared in open source. To be managed safely,
+    passwords and secret keys should be stored in separate configuration files or keystores.
+  metadata:
+    category: "security"
+    cwe: "CWE-321"
+    shortDescription: "Use of Hard-coded Cryptographic Key"
+    technology:
+    - "scala"
+  pattern-either:
+  - patterns:
+    - pattern-not-inside: |
+        def $FUNC(...,$KEY_BYTES: Array[Byte], ...): $TYPE = {
+            ...
+        }
+    - pattern-inside: |
+        $KEY = Array[Byte](...)
+        ...
+    - pattern-either:
+      - pattern: "new DESKeySpec($KEY)"
+      - pattern: "new DESedeKeySpec($KEY)"
+      - pattern: "new KerberosKey(..., $KEY,...)"
+      - pattern: "new SecretKeySpec($KEY, ...)"
+      - pattern: "new X509EncodedKeySpec($KEY)"
+      - pattern: "new PKCS8EncodedKeySpec($KEY)"
+      - pattern: "new KeyRep(..., $KEY)"
+      - pattern: "new KerberosTicket(...,$KEY,...)"
+  - patterns:
+    - pattern-inside: |
+        $KEY = ... .getBytes(...)
+        ...
+    - pattern-either:
+      - pattern: "new DESKeySpec($KEY)"
+      - pattern: "new DESedeKeySpec($KEY)"
+      - pattern: "new KerberosKey(..., $KEY,...)"
+      - pattern: "new SecretKeySpec($KEY, ...)"
+      - pattern: "new X509EncodedKeySpec($KEY)"
+      - pattern: "new PKCS8EncodedKeySpec($KEY)"
+      - pattern: "new KeyRep(..., $KEY)"
+      - pattern: "new KerberosTicket(...,$KEY,...)"
+  - patterns:
+    - pattern-not-inside: |
+        def $FUNC(..., $PRIVATE_KEY: BigInteger, ...): $TYPE = {
+            ...
+        }
+    - pattern-either:
+      - pattern: "new DSAPrivateKeySpec($PRIVATE_KEY: BigInteger, ...)"
+      - pattern: "new DSAPublicKeySpec($PRIVATE_KEY: BigInteger, ...)"
+      - pattern: "new DHPrivateKeySpec($PRIVATE_KEY: BigInteger, ...)"
+      - pattern: "new DHPublicKeySpec($PRIVATE_KEY: BigInteger, ...)"
+      - pattern: "new ECPrivateKeySpec($PRIVATE_KEY: BigInteger, ...)"
+      - pattern: "new RSAPrivateKeySpec($PRIVATE_KEY: BigInteger, ...)"
+      - pattern: "new RSAMultiPrimePrivateCrtKeySpec($PRIVATE_KEY: BigInteger, ...)"
+      - pattern: "new RSAPrivateCrtKeySpec($PRIVATE_KEY: BigInteger, ...)"
+      - pattern: "new RSAPublicKeySpec($PRIVATE_KEY: BigInteger, ...)"
+  severity: "ERROR"

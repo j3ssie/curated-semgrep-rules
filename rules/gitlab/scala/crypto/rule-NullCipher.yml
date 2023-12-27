@@ -1,0 +1,20 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_crypto_rule-NullCipher"
+  languages:
+  - "scala"
+  message: |
+    The NullCipher implements the Cipher interface by returning ciphertext identical to the
+    supplied plaintext. In a few contexts, such as testing, a NullCipher may be appropriate. Avoid
+    using the NullCipher. Its accidental use can introduce a significant confidentiality risk.
+  metadata:
+    category: "security"
+    cwe: "CWE-327"
+    shortDescription: "Use of a Broken or Risky Cryptographic Algorithm"
+    technology:
+    - "scala"
+  pattern: "new javax.crypto.NullCipher()"
+  severity: "WARNING"

@@ -1,0 +1,30 @@
+# yamllint disable
+# The ruleset is generated from flawfinder official rule repository hosted on github.
+# License: GPL 2.0 (c) 1989, 1991 Free Software Foundation, Inc.
+# source: https://github.com/david-a-wheeler/flawfinder/blob/e0d8827c3b714a883ce8036edc832721f4619524/flawfinder.py
+# yamllint enable
+---
+rules:
+- id: "c_buffer_rule-lstrcpyn-wcsncpy"
+  languages:
+  - "c"
+  message: |
+    The `lstrcpyn` family of functions do not always check for invalid pointers or check if there
+    is sufficient space prior to copying. The count argument limits the number of characters copied
+    but does validate if the count will fit within the size of the destination buffer, leading to
+    potential overflows.
+
+    If developing for C Runtime Library (CRT), more secure versions of these functions should be
+    used, see:
+    https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/strncpy-s-strncpy-s-l-wcsncpy-s-wcsncpy-s-l-mbsncpy-s-mbsncpy-s-l?view=msvc-170
+  metadata:
+    shortDescription: "Insecure functions do not always null terminate or check invalid
+      pointers"
+    cwe: "CWE-120"
+    owasp: "A1:2017-Injection"
+  pattern-either:
+  - pattern: "lstrcpyn(...)"
+  - pattern: "wcsncpy(...)"
+  - pattern: "_tcsncpy(...)"
+  - pattern: "_mbsnbcpy(...)"
+  severity: "INFO"

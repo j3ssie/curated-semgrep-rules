@@ -1,0 +1,61 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "java_xxe_rule-XMLStreamRdr"
+  languages:
+  - "java"
+  message: |
+    External XML entities are a feature of XML parsers that allow documents to contain references
+    to
+    other documents or data. This feature can be abused to read files, communicate with external
+    hosts,
+    exfiltrate data, or cause a Denial of Service (DoS).
+
+    In most XML parsers, the recommendation to protect against XXE is to disable the doctype
+    feature.
+    Unfortunately use of the `XMLInputFactory` requires that the doctypes feature be enabled.
+    Instead
+    the application can set the `ACCESS_EXTERNAL_DTD` to an empty string and disable
+    `javax.xml.stream.isSupportingExternalEntities`.
+
+
+    Creates an `XMLInputFactory` stream parser, but disables accessing external DTD or entities:
+    ```
+    // Create an XMLInputFactory
+    XMLInputFactory factory = XMLInputFactory.newFactory();
+    // Set the ACCESS_EXTERNAL_DTD property to an empty string so it won't access
+    // entities using protocols
+    // (ref:
+    https://docs.oracle.com/javase/8/docs/api/javax/xml/XMLConstants.html#ACCESS_EXTERNAL_DTD)
+    factory.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+    // Additionally, disable support for resolving external entities
+    factory.setProperty("javax.xml.stream.isSupportingExternalEntities", false);
+    // Continue to work with the factory/stream parser
+    ```
+
+    For more information on XML security see OWASP's guide:
+    https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html#java
+  metadata:
+    shortDescription: "Improper restriction of XML external entity reference ('XXE')"
+    category: "security"
+    cwe: "CWE-611"
+  patterns:
+  - pattern-inside: |
+      $SF = XMLInputFactory.newFactory();
+      ...
+  - pattern-not-inside: |
+      $SF.setProperty(XMLInputFactory.SUPPORT_DTD, false);
+      ...
+  - pattern-not-inside: |
+      $SF.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
+      ...
+  - pattern-not-inside: |
+      $SF.setProperty(XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
+      ...
+  - pattern-not-inside: |
+      $SF.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, Boolean.FALSE);
+      ...
+  - pattern: "$SF.createXMLStreamReader(...)"
+  severity: "ERROR"

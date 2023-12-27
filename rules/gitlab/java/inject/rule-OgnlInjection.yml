@@ -1,0 +1,160 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "java_inject_rule-OgnlInjection"
+  languages:
+  - "java"
+  mode: "taint"
+  pattern-sources:
+  - patterns:
+    - pattern-inside: |
+        $FUNC(..., $VAR, ...) {
+          ...
+        }
+    - metavariable-pattern:
+        metavariable: "$VAR"
+        pattern-either:
+        - pattern: "(String $S)"
+        - pattern: "(Map<String, ?> $M)"
+        - pattern: "(Map<String, String> $M)"
+        - pattern: "(Map<String, Object> $M)"
+    - pattern: "$VAR"
+  pattern-sinks:
+  - patterns:
+    - pattern-inside: |-
+        com.opensymphony.xwork2.util.TextParseUtil.translateVariables($VAL, ...)
+    - pattern: "$VAL"
+  - patterns:
+    - pattern-inside: |-
+        com.opensymphony.xwork2.util.TextParseUtil.translateVariablesCollection($VAL, ...)
+    - pattern: "$VAL"
+  - pattern: "com.opensymphony.xwork2.util.TextParseUtil.shallBeIncluded(...)"
+  - pattern: "com.opensymphony.xwork2.util.TextParseUtil.commaDelimitedStringToSet(...)"
+  - patterns:
+    - pattern-inside: |-
+        (com.opensymphony.xwork2.util.TextParser $P).evaluate($VAR, $VAL, ...)
+    - pattern: "$VAL"
+  - patterns:
+    - pattern-inside: |-
+        (com.opensymphony.xwork2.util.OgnlTextParser $P).evaluate($VAR, $VAL, ...)
+    - pattern: "$VAL"
+  - pattern: "(com.opensymphony.xwork2.ognl.OgnlReflectionProvider $P).getGetMethod($CLZ,
+      ...)"
+  - pattern: "(com.opensymphony.xwork2.ognl.OgnlReflectionProvider $P).getSetMethod($CLZ,
+      ...)"
+  - pattern: "(com.opensymphony.xwork2.ognl.OgnlReflectionProvider $P).getField($CLZ,
+      ...)"
+  - patterns:
+    - pattern-inside: |-
+        (com.opensymphony.xwork2.ognl.OgnlReflectionProvider $P).setProperties($MAP, ...)
+    - pattern: "$MAP"
+  - patterns:
+    - pattern-inside: |-
+        (com.opensymphony.xwork2.ognl.OgnlReflectionProvider $P).setProperty($VAL, ...)
+    - pattern: "$VAL"
+  - patterns:
+    - pattern-inside: |-
+        (com.opensymphony.xwork2.ognl.OgnlReflectionProvider $P).getValue($VAL, ...)
+    - pattern: "$VAL"
+  - patterns:
+    - pattern-inside: |-
+        (com.opensymphony.xwork2.ognl.OgnlReflectionProvider $P).setValue($VAL, ...)
+    - pattern: "$VAL"
+  - pattern: "(com.opensymphony.xwork2.util.reflection.ReflectionProvider $P).getGetMethod($CLZ,
+      ...)"
+  - pattern: "(com.opensymphony.xwork2.util.reflection.ReflectionProvider $P).getSetMethod($CLZ,
+      ...)"
+  - pattern: "(com.opensymphony.xwork2.util.reflection.ReflectionProvider $P).getField($CLZ,
+      ...)"
+  - patterns:
+    - pattern-inside: |-
+        (com.opensymphony.xwork2.util.reflection.ReflectionProvider $P).setProperties($MAP, ...)
+    - pattern: "$MAP"
+  - patterns:
+    - pattern-inside: |-
+        (com.opensymphony.xwork2.util.reflection.ReflectionProvider $P).setProperty($VAR, ...)
+    - pattern: "$VAR"
+  - patterns:
+    - pattern-inside: |-
+        (com.opensymphony.xwork2.util.reflection.ReflectionProvider $P).getValue($VAR, ...)
+    - pattern: "$VAR"
+  - patterns:
+    - pattern-inside: |-
+        (com.opensymphony.xwork2.util.reflection.ReflectionProvider $P).setValue($VAR, ...)
+    - pattern: "$VAR"
+  - patterns:
+    - pattern-inside: |-
+        (com.opensymphony.xwork2.ognl.OgnlUtil $P).setProperties($MAP, ...)
+    - pattern: "$MAP"
+  - patterns:
+    - pattern-inside: |-
+        (com.opensymphony.xwork2.ognl.OgnlUtil $P).setProperty($VAR, ...)
+    - pattern: "$VAR"
+  - patterns:
+    - pattern-inside: |-
+        (com.opensymphony.xwork2.ognl.OgnlUtil $P).getValue($VAR, ...)
+    - pattern: "$VAR"
+  - patterns:
+    - pattern-inside: |-
+        (com.opensymphony.xwork2.ognl.OgnlUtil $P).setValue($VAR, ...)
+    - pattern: "$VAR"
+  - patterns:
+    - pattern-inside: |-
+        (com.opensymphony.xwork2.ognl.OgnlUtil $P).callMethod($VAR, ...)
+    - pattern: "$VAR"
+  - patterns:
+    - pattern-inside: |-
+        (com.opensymphony.xwork2.ognl.OgnlUtil $P).compile($VAR, ...)
+    - pattern: "$VAR"
+  - pattern: "(org.apache.struts2.util.VelocityStrutsUtil $P).evaluate(...)"
+  - pattern: "org.apache.struts2.util.StrutsUtil.findString(...)"
+  - pattern: "org.apache.struts2.util.StrutsUtil.findValue(..., $VAL)"
+  - pattern: "org.apache.struts2.util.StrutsUtil.getText(...)"
+  - pattern: "org.apache.struts2.util.StrutsUtil.translateVariables(...)"
+  - patterns:
+    - pattern-inside: |-
+        org.apache.struts2.util.StrutsUtil.makeSelectList($VAR, ...)
+    - pattern: "$VAR"
+  - patterns:
+    - pattern-inside: |-
+        (org.apache.struts2.views.jsp.ui.OgnlTool $T).findValue($VAR, ...)
+    - pattern: "$VAR"
+  - pattern: "(com.opensymphony.xwork2.util.ValueStack $V).findString(...)"
+  - patterns:
+    - pattern-inside: |-
+        (com.opensymphony.xwork2.util.ValueStack $V).findValue($VAR, ...)
+    - pattern: "$VAR"
+  - patterns:
+    - pattern-inside: |-
+        (com.opensymphony.xwork2.util.ValueStack $V).setValue($VAR, ...)
+    - pattern: "$VAR"
+  - patterns:
+    - pattern-inside: |-
+        (com.opensymphony.xwork2.util.ValueStack $V).setParameter($VAR, ...)
+    - pattern: "$VAR"
+  message: |
+    The Object Graph Navigation Language (OGNL) is an expression language that allows access to
+    Java objects and properties stored in an ActionContext. Usage of these low-level
+    functions is discouraged because they can effectively execute strings as code, leading to
+    remote code execution vulnerabilities. Consider using struts tags when processing
+    user-supplied input and templates.
+
+    Much like the Struts security guide recommending to not use raw `${}` EL expressions,
+    do not call or use the following OGNL packages with user-supplied input:
+
+    - `com.opensymphony.xwork2.ognl`
+    - `com.opensymphony.xwork2.util`
+    - `com.opensymphony.xwork2.util.reflection`
+    - `org.apache.struts2.util.StrutsUtil`
+
+    For more information on Struts2 security see:
+    https://struts.apache.org/security/#do-not-use-incoming-untrusted-user-input-in-forced-expression-evaluation
+  severity: "WARNING"
+  metadata:
+    shortDescription: "Expression injection (OGNL)"
+    category: "security"
+    cwe: "CWE-917"
+    technology:
+    - "java"

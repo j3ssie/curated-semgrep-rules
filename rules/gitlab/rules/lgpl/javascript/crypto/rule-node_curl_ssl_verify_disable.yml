@@ -1,0 +1,19 @@
+# yamllint disable
+# License: GNU Lesser General Public License v3.0
+# source (original): https://github.com/ajinabraham/njsscan/blob/master/njsscan/rules/semantic_grep/crypto/tls_node.yaml
+# hash: e7a0a61
+# yamllint enable
+---
+rules:
+- id: "rules_lgpl_javascript_crypto_rule-node-curl-ssl-verify-disable"
+  patterns:
+  - pattern: |
+      $X(..., {SSL_VERIFYPEER : 0}, ...)
+  message: |
+    SSL Certificate verification for node-curl is disabled.
+  languages:
+  - "javascript"
+  severity: "ERROR"
+  metadata:
+    owasp: "A6:2017-Security Misconfiguration"
+    cwe: "CWE-599: Missing Validation of OpenSSL Certificate"

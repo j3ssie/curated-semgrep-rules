@@ -1,0 +1,51 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "python_requests_rule-request-without-timeout"
+  languages:
+  - "python"
+  message: |
+    The application was found using the `requests` module without configuring a timeout value for
+    connections. This could lead to uncontrolled resource consumption where the application could
+    run out of
+    socket descriptors, effectively causing a Denial of Service (DoS).
+
+    To remediate this issue, pass in a `timeout=` argument to each `requests` call.
+
+    Example using a timeout for an HTTP GET request:
+    ```
+    # Issue a GET request to https://example.com with a timeout of 10 seconds
+    response = requests.get('https://example.com', timeout=10)
+    # Work with the response object
+    # ...
+    ```
+
+    For more information on using the requests module see:
+    - https://requests.readthedocs.io/en/latest/api/
+  metadata:
+    cwe: "CWE-400"
+    category: "security"
+    shortDescription: "Uncontrolled resource consumption"
+  patterns:
+  - pattern-either:
+    - patterns:
+      - pattern: "requests.$METHOD('...', timeout=$VAL)"
+      - metavariable-comparison:
+          comparison: "$VAL <= 0"
+          metavariable: "$VAL"
+    - patterns:
+      - pattern: "requests.$METHOD('...', timeout=$VAL)"
+      - metavariable-regex:
+          metavariable: "$VAL"
+          regex: "(^None)"
+    - patterns:
+      - pattern-not: "requests.$METHOD('...', timeout=$VAL, ...)"
+      - pattern-either:
+        - pattern: "requests.$METHOD('...', ...)"
+        - pattern: "requests.$METHOD('...')"
+  - metavariable-regex:
+      metavariable: "$METHOD"
+      regex: "(get|put|delete|post|options|head|patch)"
+  severity: "WARNING"

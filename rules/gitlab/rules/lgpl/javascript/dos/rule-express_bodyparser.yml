@@ -1,0 +1,23 @@
+# yamllint disable
+# License: GNU Lesser General Public License v3.0
+# source (original): https://github.com/ajinabraham/njsscan/blob/master/njsscan/rules/semantic_grep/dos/express_bodyparser_dos.yaml
+# hash: e7a0a61
+# yamllint enable
+---
+rules:
+- id: "rules_lgpl_javascript_dos_rule-express-bodyparser"
+  patterns:
+  - pattern-inside: |
+      $APP = express()
+      ...
+  - pattern-inside: |
+      $APP.use(...)
+  - pattern: "$X.bodyParser(...)"
+  message: |
+    POST Request to Express Body Parser 'bodyParser()' can create Temporary files and consume space.
+  languages:
+  - "javascript"
+  severity: "ERROR"
+  metadata:
+    owasp: "A9:2017-Using Components with Known Vulnerabilities"
+    cwe: "CWE-400: Uncontrolled Resource Consumption"

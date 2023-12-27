@@ -1,0 +1,29 @@
+# yamllint disable
+# The ruleset is generated from flawfinder official rule repository hosted on github.
+# License: GPL 2.0 (c) 1989, 1991 Free Software Foundation, Inc.
+# source: https://github.com/david-a-wheeler/flawfinder/blob/e0d8827c3b714a883ce8036edc832721f4619524/flawfinder.py
+# yamllint enable
+---
+rules:
+- id: "c_shell_rule-CreateProcessAsUser-CreateProcessWithLogon"
+  languages:
+  - "c"
+  message: |
+    Due to how `CreateProcess` parses spaces, an attacker may be able to exploit this function
+    by creating a binary with the same name that is loaded first, depending on the search path
+    order.
+
+    Ensure that quotation marks around the executable path are used, such as:
+    ```
+    CreateProcessAsUser(hToken, NULL, "\"C:\\Program Files\\MyApp.exe\"", ...)
+    ```
+    For more information, please see MSDNs documentation at:
+    https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-createprocessasusera#security-remarks
+  metadata:
+    shortDescription: "Possible executable path hijacking (CreateProcessAsUser/CreateProcessWithLogon)"
+    cwe: "CWE-78"
+    owasp: "A1:2017-Injection"
+  pattern-either:
+  - pattern: "CreateProcessAsUser(...)"
+  - pattern: "CreateProcessWithLogon(...)"
+  severity: "WARNING"

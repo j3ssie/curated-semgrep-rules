@@ -1,0 +1,21 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_script_rule-SpelView"
+  languages:
+  - "scala"
+  message: |
+    The software constructs all or part of a code segment using externally-influenced
+    input from an upstream component, but it does not neutralize or incorrectly
+    neutralizes special elements that could modify the syntax or behavior of the
+    intended code segment.
+  metadata:
+    cwe: "CWE-94"
+    shortDescription: "Improper Control of Generation of Code ('Code Injection')"
+  patterns:
+  - pattern: "($P: org.springframework.expression.spel.standard.SpelExpressionParser).parseExpression($ARG);"
+  - pattern-not: "($P: org.springframework.expression.spel.standard.SpelExpressionParser
+      ).parseExpression(\"...\");"
+  severity: "ERROR"

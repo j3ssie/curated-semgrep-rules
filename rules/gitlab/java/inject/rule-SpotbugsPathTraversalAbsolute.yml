@@ -1,0 +1,115 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "java_inject_rule-SpotbugsPathTraversalAbsolute"
+  languages:
+  - "java"
+  mode: "taint"
+  pattern-sanitizers:
+  - pattern: "org.apache.commons.io.FilenameUtils.getName(...)"
+  pattern-sinks:
+  - patterns:
+    - pattern-inside: |
+        $U = new java.net.URI($VAR)
+    - pattern-either:
+      - pattern-inside: |-
+          new java.io.File($U)
+      - pattern-inside: |-
+          java.nio.file.Paths.get($U)
+    - pattern: "$VAR"
+  - patterns:
+    - pattern-inside: |-
+        new java.io.RandomAccessFile($INPUT,...)
+    - pattern: "$INPUT"
+  - pattern: "new java.io.FileReader(...)"
+  - pattern: "new javax.activation.FileDataSource(...)"
+  - pattern: "new java.io.FileInputStream(...)"
+  - pattern: "new java.io.File(...)"
+  - pattern: "java.nio.file.Paths.get(...)"
+  - pattern: "java.io.File.createTempFile(...)"
+  - pattern: "java.io.File.createTempDirectory(...)"
+  - pattern: "java.nio.file.Files.createTempFile(...)"
+  - pattern: "java.nio.file.Files.createTempDirectory(...)"
+  - patterns:
+    - pattern: "$SRC.$METHOD(...)"
+    - metavariable-pattern:
+        metavariable: "$SRC"
+        pattern-either:
+        - pattern: "getClass()"
+        - pattern: "getClass().getClassLoader()"
+        - pattern: "(ClassLoader $C)"
+        - pattern: "(Class $C)"
+        - pattern: "$CLZ.getClassLoader()"
+    - metavariable-pattern:
+        metavariable: "$METHOD"
+        pattern-either:
+        - pattern: "getResourceAsStream"
+        - pattern: "getResource"
+  - patterns:
+    - pattern-inside: |-
+        new java.io.FileWriter($PATH, ...)
+    - pattern: "$PATH"
+  - patterns:
+    - pattern-inside: |-
+        new java.io.FileOutputStream($PATH, ...)
+    - pattern: "$PATH"
+  pattern-sources:
+  - pattern: "(HttpServletRequest $REQ).getParameter(...)"
+  - patterns:
+    - pattern-inside: |-
+        $FUNC(..., @RequestParam $TYPE $REQ, ...) {...}
+    - focus-metavariable: "$REQ"
+  message: |
+    The application dynamically constructs file or path information. If the path
+    information comes from user input, it could be abused to read sensitive files,
+    access other users' data, or aid in exploitation to gain further system access.
+
+    User input should never be used in constructing paths or files for interacting
+    with the filesystem. This includes filenames supplied by user uploads or downloads.
+    If possible, consider hashing user input or replacing it with unique values and
+    use `Path.resolve` to resolve and validate the path information
+    prior to processing any file functionality.
+
+    Example using `Path.resolve` and not allowing direct user input:
+    ```
+    // Class to store our user data along with a randomly generated file name
+    public static class UserData {
+        private String userFileNameUnsafe;
+        private String fileName;
+        public UserData(String userFileName) {
+            this.userFileNameUnsafe = userFileName;
+            // Generate a random ID for the filename
+            this.fileName = UUID.randomUUID().toString();
+        }
+        public String getUserFileNameUnsafe() { return userFileNameUnsafe; };
+        public String getFileName() { return fileName; };
+    }
+
+    public static void main(String[] args) throws Exception {
+        // User input, saved only as a reference
+        UserData userData = new UserData("..\\test.txt");
+        // Restrict all file processing to this directory only
+        String base = "/var/app/restricted";
+        Path basePath = Paths.get(base);
+        // Resolve the full path, but only use our random generated filename
+        Path fullPath = basePath.resolve(userData.getFileName());
+        // verify the path is contained within our basePath
+        if (!fullPath.startsWith(base)) {
+            throw new Exception("Invalid path specified!");
+        }
+        // process / work with file
+    }
+    ```
+
+    For more information on path traversal issues see OWASP:
+    https://owasp.org/www-community/attacks/Path_Traversal
+  severity: "WARNING"
+  metadata:
+    shortDescription: "Improper limitation of a pathname to a restricted directory
+      ('Path Traversal')"
+    category: "security"
+    cwe: "CWE-22"
+    technology:
+    - "java"

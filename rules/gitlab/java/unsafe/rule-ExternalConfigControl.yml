@@ -1,0 +1,30 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "java_unsafe_rule-ExternalConfigControl"
+  languages:
+  - "java"
+  patterns:
+  - pattern: |
+      $TAINTED = (HttpServletRequest $REQ).getParameter(...);
+      ...
+      (java.sql.Connection $CONN).setCatalog($TAINTED);
+  message: |
+    The application was found using user-supplied input in a `java.sql.Connection`'s
+    `setCatalog` call. This could allow an adversary to supply a different database for the
+    lifetime of the connection. Allowing external control of system settings can disrupt service
+    or cause an application to behave in unexpected, and potentially malicious ways. Most likely
+    this would only cause an error by providing a nonexistent catalog name.
+
+    It is recommended to not use user-supplied input when selecting the database for an
+    applications
+    database connection.
+  severity: "WARNING"
+  metadata:
+    shortDescription: "External control of system or configuration setting"
+    category: "security"
+    cwe: "CWE-15"
+    technology:
+    - "java"

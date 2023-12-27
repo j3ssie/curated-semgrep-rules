@@ -1,0 +1,55 @@
+# yamllint disable
+# License: GNU Lesser General Public License v3.0
+# source (original): https://github.com/ajinabraham/njsscan/blob/master/njsscan/rules/semantic_grep/headers/header_cookie.yaml
+# hash: e7a0a61
+# yamllint enable
+---
+rules:
+- id: "rules_lgpl_javascript_headers_rule-cookie-session-no-secure"
+  patterns:
+  - pattern-either:
+    - pattern-inside: |
+        $SESSION = require('cookie-session')
+        ...
+    - pattern-inside: |
+        $SESSION = require('express-session')
+        ...
+  - pattern: "$SESSION(...)"
+  - pattern-not-inside: |-
+      $SESSION(<... {cookie:{secure:true}} ...>,...)
+  - pattern-not-inside: |
+      $OPTS = <... {cookie:{secure:true}} ...>;
+      ...
+      $SESSION($OPTS,...)
+  - pattern-not-inside: |
+      $OPTS = ...;
+      ...
+      $COOKIE = <... {secure:true} ...>;
+      ...
+      $SESSION($OPTS,...)
+  - pattern-not-inside: |
+      $OPTS = ...;
+      ...
+      $OPTS.cookie = <... {secure:true} ...>;
+      ...
+      $SESSION($OPTS,...)
+  - pattern-not-inside: |
+      $OPTS = ...;
+      ...
+      $COOKIE.secure = true;
+      ...
+      $SESSION($OPTS,...)
+  - pattern-not-inside: |
+      $OPTS = ...;
+      ...
+      $OPTS.cookie.secure = true;
+      ...
+      $SESSION($OPTS,...)
+  message: |
+    'Default session middleware settings: `secure` not set. It ensures the browser only sends the cookie over HTTPS.'
+  severity: "WARNING"
+  languages:
+  - "javascript"
+  metadata:
+    owasp: "A2:2017-Broken Authentication"
+    cwe: "CWE-614: Sensitive Cookie in HTTPS Session Without ''Secure'' Attribute"

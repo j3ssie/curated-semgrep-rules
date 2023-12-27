@@ -1,0 +1,41 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_inject_rule-CustomInjection"
+  languages:
+  - "scala"
+  message: |
+    The method identified is susceptible to injection. The input should be validated and properly
+    escaped.
+  metadata:
+    category: "security"
+    cwe: "CWE-89"
+    shortDescription: "Improper Neutralization of Special Elements used in an SQL
+      Command ('SQL Injection')"
+    technology:
+    - "scala"
+  patterns:
+  - pattern-either:
+    - pattern-inside: |
+        val $ST = connection.createStatement
+        ...
+  - pattern-either:
+    - pattern: |
+        val $QUERY = ... + $VAR + ...
+        ...
+        $ST.executeQuery($QUERY)
+    - pattern: |
+        val $QUERY = ... + $VAR
+        ...
+        $ST.executeQuery($QUERY)
+    - pattern: |
+        val $QUERY = String.format("...",...,$VAR,...)
+        ...
+        $ST.executeQuery($QUERY)
+    - pattern: "$ST.executeQuery(($SB: StringBuilder).toString())"
+    - pattern: "$ST.executeQuery(... + $VAR + ...)"
+    - pattern: "$ST.executeQuery(... + $VAR)"
+    - pattern: "$ST.executeQuery(...,String.format(\"...\",...,$VAR,...), ...)"
+  severity: "WARNING"

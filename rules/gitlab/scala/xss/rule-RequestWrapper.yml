@@ -1,0 +1,22 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_xss_rule-RequestWrapper"
+  languages:
+  - "scala"
+  message: |
+    Avoid using custom XSS filtering. Please use standard sanitization functions.
+  metadata:
+    category: "security"
+    cwe: "CWE-79"
+    shortDescription: "Improper Neutralization of Input During Web Page Generation
+      ('Cross-site Scripting')"
+  patterns:
+  - pattern-inside: |
+      class $CLASS(...) extends HttpServletRequestWrapper(...) {
+      ...
+      }
+  - pattern: "def stripXSS(...) = { ... }"
+  severity: "INFO"

@@ -1,0 +1,26 @@
+# yamllint disable
+# The ruleset is generated from flawfinder official rule repository hosted on github.
+# License: GPL 2.0 (c) 1989, 1991 Free Software Foundation, Inc.
+# source: https://github.com/david-a-wheeler/flawfinder/blob/e0d8827c3b714a883ce8036edc832721f4619524/flawfinder.py
+# yamllint enable
+---
+rules:
+- id: "c_buffer_rule-getenv-curl-getenv"
+  languages:
+  - "c"
+  message: |
+    This function's return value should be treated as untrusted input as it could be
+    modified by an attacker. Possible risks include:
+
+    - The value being too large and causing buffer overflows
+    - Files under the attacker's control being used maliciously
+    - Files outside of an attacker's control becoming accessible, depending on
+    access privileges.
+  metadata:
+    shortDescription: "Possible use of untrusted environment variable"
+    cwe: "CWE-20"
+    owasp: "A1:2017-Injection"
+  pattern-either:
+  - pattern: "getenv(...)"
+  - pattern: "curl_getenv(...)"
+  severity: "WARNING"

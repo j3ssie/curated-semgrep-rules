@@ -1,0 +1,15 @@
+rules:
+  - id: getclientmimetype-used
+    patterns:
+      - pattern: $X->file->getClientMimeType();
+    fix: $X->file->getMimeType();
+    message: |
+      For a trusted mime type, use `getMimeType()` instead (which guesses the mime
+      type based on the file content).
+    metadata:
+      cwe: 'CWE-434'
+      owasp: 'A1: Injection'
+      references:
+        - https://github.com/laravel/framework/issues/29962
+    languages: [php]
+    severity: INFO

@@ -1,0 +1,22 @@
+# yamllint disable
+# License: GNU Lesser General Public License v3.0
+# source (original): https://github.com/ajinabraham/njsscan/blob/master/njsscan/rules/semantic_grep/crypto/tls_node.yaml
+# hash: e7a0a61
+# yamllint enable
+---
+rules:
+- id: "rules_lgpl_javascript_crypto_rule-node-tls-reject"
+  patterns:
+  - pattern-either:
+    - pattern: |
+        $X.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
+    - pattern: |
+        $X.env['NODE_TLS_REJECT_UNAUTHORIZED']= '0'
+  message: |
+    Setting 'NODE_TLS_REJECT_UNAUTHORIZED' to 0 will allow node server to accept self signed certificates and is not a secure behaviour.
+  languages:
+  - "javascript"
+  severity: "ERROR"
+  metadata:
+    owasp: "A6:2017-Security Misconfiguration"
+    cwe: "CWE-295: Improper Certificate Validation"

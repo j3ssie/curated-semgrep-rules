@@ -1,0 +1,22 @@
+# yamllint disable
+# License: GNU Lesser General Public License v3.0
+# source (original): https://github.com/ajinabraham/njsscan/blob/master/njsscan/rules/semantic_grep/eval/eval_deserialize.yaml
+# hash: e7a0a61
+# yamllint enable
+---
+rules:
+- id: "rules_lgpl_javascript_eval_rule-node-deserialize"
+  patterns:
+  - pattern-inside: |
+      require('node-serialize')
+      ...
+  - pattern: |
+      $X.unserialize(...)
+  message: |
+    User controlled data in 'unserialize()' or 'deserialize()' function can result in Object Injection or Remote Code Injection.
+  languages:
+  - "javascript"
+  severity: "ERROR"
+  metadata:
+    owasp: "A8:2017-Insecure Deserialization"
+    cwe: "CWE-502: Deserialization of Untrusted Data"

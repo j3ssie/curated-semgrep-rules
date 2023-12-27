@@ -1,0 +1,44 @@
+# yamllint disable
+# License: Apache 2.0 (c) gosec
+# source (original): https://github.com/securego/gosec/blob/master/rules/fileperms.go
+# hash: c6e10af 
+# yamllint enable
+---
+rules:
+- id: "go_file-permissions_rule-fileperm"
+  languages:
+  - "go"
+  patterns:
+  - pattern-either:
+    - pattern: "os.Chmod(...,$MASK)"
+    - pattern: "os.OpenFile(...,$MASK)"
+  - metavariable-comparison:
+      metavariable: "$MASK"
+      comparison: "$MASK > 0o600"
+      base: 8
+  message: |
+    The application was found setting file permissions to overly permissive values. Consider
+    using the following values if the application user is the only process to access
+    the file:
+
+    - 0400 - read only access to the file
+    - 0200 - write only access to the file
+    - 0600 - read/write access to the file
+
+    Example creating a file with read/write permissions for the application user:
+    ```
+    f, err := os.OpenFile("file.txt", os.O_CREATE, 0600)
+    if err != nil {
+      log.Fatal(err)
+    }
+    defer f.Close()
+    // continue to work with file here
+    ```
+
+    For all other values please see:
+    https://en.wikipedia.org/wiki/File-system_permissions#Numeric_notation
+  metadata:
+    shortDescription: "Incorrect permission assignment for critical resource"
+    cwe: "CWE-732"
+    owasp: "A6:2017-Security Misconfiguration"
+  severity: "WARNING"

@@ -1,0 +1,24 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_crypto_rule-CustomMessageDigest"
+  languages:
+  - "scala"
+  message: |
+    Implementing a custom MessageDigest is error-prone. National Institute of Standards and
+    Technology(NIST) recommends the use of SHA-224, SHA-256, SHA-384, SHA-512, SHA-512/224, or
+    SHA-512/256.
+  metadata:
+    category: "security"
+    cwe: "CWE-327"
+    shortDescription: "Use of a Broken or Risky Cryptographic Algorithm"
+    technology:
+    - "scala"
+  patterns:
+  - pattern: |
+      class $CLAZZ extends java.security.MessageDigest(...) {
+        ...
+      }
+  severity: "WARNING"

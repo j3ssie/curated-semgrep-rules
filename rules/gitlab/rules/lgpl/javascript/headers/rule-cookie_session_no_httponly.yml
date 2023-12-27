@@ -1,0 +1,55 @@
+# yamllint disable
+# License: GNU Lesser General Public License v3.0
+# source (original): https://github.com/ajinabraham/njsscan/blob/master/njsscan/rules/semantic_grep/headers/header_cookie.yaml
+# hash: e7a0a61
+# yamllint enable
+---
+rules:
+- id: "rules_lgpl_javascript_headers_rule-cookie-session-no-httponly"
+  patterns:
+  - pattern-either:
+    - pattern-inside: |
+        $SESSION = require('cookie-session')
+        ...
+    - pattern-inside: |
+        $SESSION = require('express-session')
+        ...
+  - pattern-either:
+    - pattern-inside: |-
+        $SESSION(<... {cookie:{httpOnly:false}} ...>,...)
+    - pattern-inside: |
+        $OPTS = <... {cookie:{httpOnly:false}} ...>;
+        ...
+        $SESSION($OPTS,...)
+    - pattern-inside: |
+        $OPTS = ...;
+        ...
+        $COOKIE = <... {httpOnly:false} ...>;
+        ...
+        $SESSION($OPTS,...)
+    - pattern-inside: |
+        $OPTS = ...;
+        ...
+        $OPTS.cookie = <... {httpOnly:false} ...>;
+        ...
+        $SESSION($OPTS,...)
+    - pattern-inside: |
+        $OPTS = ...;
+        ...
+        $COOKIE.httpOnly = false;
+        ...
+        $SESSION($OPTS,...)
+    - pattern-inside: |
+        $OPTS = ...;
+        ...
+        $OPTS.cookie.httpOnly = false;
+        ...
+        $SESSION($OPTS,...)
+  message: |
+    'Session middleware settings: `httpOnly` is explicitly set to false.  It ensures that sensitive cookies cannot be accessed by client side  JavaScript and helps to protect against cross-site scripting attacks.'
+  severity: "WARNING"
+  languages:
+  - "javascript"
+  metadata:
+    owasp: "A2:2017-Broken Authentication"
+    cwe: "CWE-1004: Sensitive Cookie Without ''HttpOnly'' Flag"

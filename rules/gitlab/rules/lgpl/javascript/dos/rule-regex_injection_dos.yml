@@ -1,0 +1,77 @@
+# yamllint disable
+# License: GNU Lesser General Public License v3.0
+# source (original): https://github.com/ajinabraham/njsscan/blob/master/njsscan/rules/semantic_grep/dos/regex_injection.yaml
+# hash: e7a0a61
+# yamllint enable
+---
+rules:
+- id: "rules_lgpl_javascript_dos_rule-regex-injection-dos"
+  patterns:
+  - pattern-either:
+    - pattern-inside: |-
+        function ($REQ, $RES, ...) {...}
+    - pattern-inside: |-
+        function $FUNC($REQ, $RES, ...) {...}
+    - pattern-inside: |-
+        $X = function $FUNC($REQ, $RES, ...) {...}
+    - pattern-inside: |-
+        var $X = function $FUNC($REQ, $RES, ...) {...};
+    - pattern-inside: |-
+        $APP.$METHOD(..., function $FUNC($REQ, $RES, ...) {...})
+  - pattern-either:
+    - pattern: |
+        $INP = <... $REQ.$PARAM ...>;
+        ...
+        $RE = new RegExp(<... $INP ...>)
+    - pattern: |
+        $INP = <... $REQ.$PARAM.$BAR ...>;
+        ...
+        $RE = new RegExp(<... $INP ...>)
+    - pattern: |
+        new RegExp(<... $REQ.$PARAM ...>)
+    - pattern: |
+        new RegExp(<... $REQ.$PARAM.$BAR ...>)
+    - pattern: |
+        $INP = <... $REQ.$PARAM ...>;
+        ...
+        $RE = $STR.search(<... $INP ...>)
+    - pattern: |
+        $INP = <... $REQ.$PARAM.$FOO ...>;
+        ...
+        $RE = $STR.search(<... $INP ...>)
+    - pattern: |
+        $STR.search(<... $REQ.$PARAM ...>)
+    - pattern: |
+        $STR.search(<... $REQ.$PARAM.$BAR ...>)
+    - pattern: |
+        $INP = <... $REQ.$PARAM ...>;
+        ...
+        $RE = $STR.match(<... $INP ...>)
+    - pattern: |
+        $INP = <... $REQ.$PARAM.$FOO ...>;
+        ...
+        $RE = $STR.match(<... $INP ...>)
+    - pattern: |
+        $STR.match(<... $REQ.$PARAM ...>)
+    - pattern: |
+        $STR.match(<... $REQ.$PARAM.$BAR ...>)
+    - pattern: |
+        $INP = <... $REQ.$PARAM ...>;
+        ...
+        $RE = $STR.split(<... $INP ...>)
+    - pattern: |
+        $INP = <... $REQ.$PARAM.$FOO ...>;
+        ...
+        $RE = $STR.split(<... $INP ...>)
+    - pattern: |
+        $STR.split(<... $REQ.$PARAM ...>)
+    - pattern: |
+        $STR.split(<... $REQ.$PARAM.$BAR ...>)
+  message: |
+    User controlled data in RegExp() can make the application vulnerable to layer 7 DoS.
+  languages:
+  - "javascript"
+  severity: "ERROR"
+  metadata:
+    owasp: "A1:2017-Injection"
+    cwe: "CWE-400: Uncontrolled Resource Consumption"

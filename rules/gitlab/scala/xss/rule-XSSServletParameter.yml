@@ -1,0 +1,43 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_xss_rule-XSSServletParameter"
+  languages:
+  - "scala"
+  message: |
+    The Servlet can read GET and POST parameters from various methods. The value obtained should be
+    considered unsafe. You may need to validate or sanitize those values before passing them to
+    sensitive APIs
+  metadata:
+    category: "security"
+    cwe: "CWE-20"
+    shortDescription: "Improper Input Validation"
+    technology:
+    - "scala"
+  pattern-either:
+  - patterns:
+    - pattern-inside: "def $FUNC(..., $REQ: ServletRequest, ...) : $TYPE = {\n  ...
+        \n}\n"
+    - pattern-either:
+      - pattern: "$REQ.getParameter(...)"
+      - pattern: "$REQ.getParameterValues"
+      - pattern: "$REQ.getParameterMap(...)"
+      - pattern: "$REQ.getParameterNames"
+  - patterns:
+    - pattern-inside: "def $FUNC(..., $SREQ: HttpServletRequest, ...) : $TYPE = {\n
+        \ ... \n}\n"
+    - pattern-either:
+      - pattern: "$SREQ.getRequestedSessionId"
+      - pattern: "$SREQ.getQueryString"
+      - pattern: "$SREQ.getParameter(...)"
+      - pattern: "$SREQ.getParameterValues"
+      - pattern: "$SREQ.getParameterMap(...)"
+      - pattern: "$SREQ.getParameterNames"
+      - patterns:
+        - pattern: "$SREQ.getHeader($HEADER)"
+        - metavariable-regex:
+            metavariable: "$HEADER"
+            regex: "(?i)(Host|Referer|User-Agent)"
+  severity: "WARNING"

@@ -1,0 +1,32 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "python_exec_rule-linux-command-wildcard-injection"
+  languages:
+  - "python"
+  message: |
+    Detected use of the wildcard character in a system call that spawns a shell.This subjects the
+    wildcard to normal shell expansion, which can have unintended consequencesif there exist any
+    non-standard file names. Consider a file named `-e sh script.sh`.
+  metadata:
+    cwe: "CWE-155"
+    owasp: "A1:2017-Injection"
+    shortDescription: "Improper Neutralization of Wildcards or Matching Symbols"
+  patterns:
+  - pattern-either:
+    - pattern-inside: |-
+        os.system("...")
+    - pattern-inside: |-
+        os.popen("...")
+    - pattern-inside: |-
+        os.popen2("...")
+    - pattern-inside: |-
+        os.popen3("...")
+    - pattern-inside: |-
+        os.popen4("...")
+    - pattern-inside: |-
+        subprocess.$W(..., shell=True, ...)
+  - pattern-regex: "(tar|chmod|chown|rsync)(.*?)\\*"
+  severity: "WARNING"

@@ -1,0 +1,27 @@
+# yamllint disable
+# The ruleset is generated from flawfinder official rule repository hosted on github.
+# License: GPL 2.0 (c) 1989, 1991 Free Software Foundation, Inc.
+# source: https://github.com/david-a-wheeler/flawfinder/blob/e0d8827c3b714a883ce8036edc832721f4619524/flawfinder.py
+# yamllint enable
+---
+rules:
+- id: "c_buffer_rule-memcpy-CopyMemory"
+  languages:
+  - "c"
+  message: |
+    The `memcpy` family of functions require the developer to validate that the destination buffer
+    is the same size or larger than the source buffer. Buffer overflows could be introduced if care
+    is not taken to validate buffer sizes.
+
+    If developing for C Runtime Library (CRT), more secure versions of these functions should be
+    used, see:
+    https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/memcpy-s-wmemcpy-s?view=msvc-170
+  metadata:
+    shortDescription: "Function does not check for buffer overflows when copying"
+    cwe: "CWE-120"
+    owasp: "A1:2017-Injection"
+  pattern-either:
+  - pattern: "memcpy(...)"
+  - pattern: "CopyMemory(...)"
+  - pattern: "bcopy(...)"
+  severity: "INFO"

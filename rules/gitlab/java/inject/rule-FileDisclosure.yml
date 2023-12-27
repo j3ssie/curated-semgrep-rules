@@ -1,0 +1,106 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "java_inject_rule-FileDisclosure"
+  languages:
+  - "java"
+  mode: "taint"
+  pattern-sinks:
+  - patterns:
+    - pattern: "new org.springframework.web.servlet.ModelAndView($FST);"
+    - pattern: "$FST"
+  - patterns:
+    - pattern: "new org.springframework.web.servlet.ModelAndView($FST, $SND);"
+    - pattern: "$FST"
+  - patterns:
+    - pattern: "new org.springframework.web.servlet.ModelAndView($FST, $SND, $TRD);"
+    - pattern: "$FST"
+  - patterns:
+    - pattern: "new org.apache.struts.action.ActionForward($FST)"
+    - pattern: "$FST"
+  - patterns:
+    - pattern: "new org.apache.struts.action.ActionForward($FST, $SND)"
+    - pattern: "$FST"
+  - patterns:
+    - pattern: "new org.apache.struts.action.ActionForward($FST, $SND, $TRD)"
+    - pattern: "$SND"
+  - patterns:
+    - pattern: "new org.apache.struts.action.ActionForward($FST, $SND, $TRD)"
+    - pattern: "$TRD"
+  - patterns:
+    - pattern-inside: |
+        $ACTION = new org.apache.struts.action.ActionForward();
+        ...
+    - pattern: "$ACTION.setPath(...)"
+  - patterns:
+    - pattern-inside: |
+        $MVC = new org.springframework.web.servlet.ModelAndView();
+        ...
+    - pattern: "$MVC.setViewName(...);"
+  - patterns:
+    - pattern-inside: |
+        $REQ = $HTTP.getRequestDispatcher(...);
+        ...
+    - pattern-either:
+      - pattern: "$REQ.include($FST, $SND)"
+      - pattern: "$REQ.forward($FST, $SND)"
+  pattern-sources:
+  - pattern: "(javax.servlet.http.HttpServletRequest $VAR).getParameter(...)"
+  message: |
+    The `org.springframework.web.servlet.ModelAndView` class and
+    `HttpRequest.getRequestDispatcher()`'s `include` and `forward` methods may
+    potentially allow access to restricted files if called with user-supplied input.
+
+    For Spring MVC, the ModelAndView class looks up a view by name to resolve a `.jsp`
+    file. If this view name comes from user-supplied input, it could be abused to attempt
+    to return a JSP view that the user should not have access to.
+
+    The `HttpRequest.getRequestDispatcher()`'s `include` and `forward` methods will return
+    any file that is resolvable within the web application context. This includes the `web.xml`
+    file, any compiled classes, `jsp` files, and additional JAR or WAR libraries that are
+    accessible.
+
+    Never pass user-supplied input directly to any of these methods. Use a lookup table or
+    hardcode
+    which views or paths the user should be directed to. Another option is to use a simple HTTP
+    redirect by returning an empty response body with a 301 status code and a `Location` redirect
+    header. In Java servlets, this can be done by using the `response.sendRedirect(...)` method.
+
+    Example using a lookup table to resolve a view from a Spring MVC application:
+    ```
+    @RequestMapping(value="/mvc", method=RequestMethod.GET)
+    public ModelAndView mvc(HttpServletRequest request, HttpServletResponse response, Model model)
+     {
+      // Create a look up table or pull from a data source
+      HashMap<String, String> lookupTable = new HashMap<>();
+      lookupTable.put("key1", "view1");
+      lookupTable.put("key2", "view2");
+      // Get user input
+      String userInput = request.getParameter("key");
+      // Look up view from the user input
+      String viewValue = lookupTable.getOrDefault(userInput, userInput);
+      // return the new model and view
+      return new ModelAndView(viewValue);
+    }
+    ```
+
+    Example using a redirect instead of a `RequestDispatcher`:
+    ```
+    // Create a look up table or pull from a data source
+    HashMap<String, String> lookupTable = new HashMap<>();
+    lookupTable.put("key1", "/Resource1");
+    lookupTable.put("key2", "/Resource2");
+    // Get user input
+    String userInput = request.getParameter("key");
+    // Look up resource to redirect to from the user input
+    String redirectValue = lookupTable.getOrDefault(userInput, "/Resource1");
+    // Redirect the user
+    response.sendRedirect(redirectValue);
+    ```
+  metadata:
+    shortDescription: "Files or directories accessible to external parties"
+    category: "security"
+    cwe: "CWE-552"
+  severity: "ERROR"

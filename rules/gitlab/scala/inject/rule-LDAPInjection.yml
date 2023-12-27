@@ -1,0 +1,51 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_inject_rule-LDAPInjection"
+  languages:
+  - "scala"
+  message: |
+    Just like SQL, all inputs passed to an LDAP query need to be passed in safely. Unfortunately,
+    LDAP doesn't have prepared statement interfaces like SQL. Therefore, the primary defense
+    against LDAP injection is strong input validation of any untrusted data before including it in
+    an LDAP query.
+  metadata:
+    category: "security"
+    cwe: "CWE-90"
+    shortDescription: "Improper Neutralization of Special Elements used in an LDAP
+      Query ('LDAP Injection')"
+    technology:
+    - "scala"
+  patterns:
+  - pattern-either:
+    - pattern-inside: |
+        def $FUNC(..., $VAR: String, ...): $TYPE = {
+          ...
+        }
+    - pattern-inside: |
+        def $FUNC(..., $X: String, ...): $TYPE = {
+          ...
+          $VAR = ... + $X;
+          ...
+        }
+  - pattern-either:
+    - pattern: "($P: java.util.Properties).put($KEY, $VAR)"
+    - pattern: "$CTX.lookup(..., $VAR, ...)"
+    - pattern: "$CTX.search(..., $VAR, ...)"
+    - pattern: "$CTX.list(..., $VAR, ...)"
+  - metavariable-pattern:
+      metavariable: "$CTX"
+      pattern-either:
+      - pattern: "($CTX: javax.naming.directory.DirContext)"
+      - pattern: "($CTX: javax.naming.directory.Context)"
+      - pattern: "($CTX: javax.naming.Context)"
+      - pattern: "($CTX: javax.naming.directory.InitialDirContext)"
+      - pattern: "($CTX: javax.naming.ldap.LdapContext)"
+      - pattern: "($CTX: com.unboundid.ldap.sdk.LDAPConnection)"
+      - pattern: "($CTX: javax.naming.event.EventDirContext)"
+      - pattern: "($CTX: com.sun.jndi.ldap.LdapCtx)"
+      - pattern: "($CTX: org.springframework.ldap.core.LdapTemplate)"
+      - pattern: "($CTX: org.springframework.ldap.core.LdapOperations)"
+  severity: "WARNING"

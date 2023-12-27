@@ -1,0 +1,26 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "python_exec_rule-subprocess-call-array"
+  languages:
+  - "python"
+  message: |
+    subprocess call - check for execution of untrusted input
+  metadata:
+    cwe: "CWE-78"
+    owasp: "A1:2017-Injection"
+    shortDescription: "Improper Neutralization of Special Elements used in an OS Command
+      ('OS Command Injection')"
+  patterns:
+  - pattern: |
+      subprocess.$FUNC([..., $ARG, ...])
+  - metavariable-pattern:
+      metavariable: "$ARG"
+      patterns:
+      - pattern-not: |
+          "..."
+      - pattern-not: |
+          '...'
+  severity: "WARNING"

@@ -1,0 +1,34 @@
+# yamllint disable
+# The ruleset is generated from flawfinder official rule repository hosted on github.
+# License: GPL 2.0 (c) 1989, 1991 Free Software Foundation, Inc.
+# source: https://github.com/david-a-wheeler/flawfinder/blob/e0d8827c3b714a883ce8036edc832721f4619524/flawfinder.py
+# yamllint enable
+---
+rules:
+- id: "c_buffer_rule-fscanf-sscanf"
+  languages:
+  - "c"
+  message: |
+    Format specifiers can take optional field widths, which should be
+    used to limit how many characters are copied into the target buffer.
+
+    Example:
+    ```
+      const char str[20] = "AAAAAAAAAAAAAAAAAAA";
+      char buf[11] = {0};
+      sscanf(str, "%10s", &buf); // buf = AAAAAAAAAA\0
+    ```
+  metadata:
+    shortDescription: "sscanf() functions may allow format string based overflows"
+    cwe: "CWE-120"
+    owasp: "A1:2017-Injection"
+  pattern-either:
+  - pattern: "fscanf(...)"
+  - pattern: "sscanf(...)"
+  - pattern: "vsscanf(...)"
+  - pattern: "vfscanf(...)"
+  - pattern: "_ftscanf(...)"
+  - pattern: "fwscanf(...)"
+  - pattern: "vfwscanf(...)"
+  - pattern: "vswscanf(...)"
+  severity: "ERROR"

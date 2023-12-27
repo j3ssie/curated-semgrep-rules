@@ -1,0 +1,18 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_xss_rule-WicketXSS"
+  languages:
+  - "scala"
+  message: |
+    Disabling HTML escaping put the application at risk for Cross-Site Scripting (XSS).
+  metadata:
+    category: "security"
+    cwe: "CWE-79"
+    shortDescription: "Improper Neutralization of Input During Web Page Generation
+      ('Cross-site Scripting')"
+  patterns:
+  - pattern: "($X: Label).setEscapeModelStrings(false);"
+  severity: "WARNING"

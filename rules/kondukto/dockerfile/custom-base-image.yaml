@@ -1,0 +1,19 @@
+rules:
+- id: use-distroless-base-image
+  languages:
+    - dockerfile
+  message: >-
+    Distroless base image not found. Please use `gcr.io/distroless/static-debian10` as a base image.
+  severity: ERROR
+  metadata: 
+    category: security
+    technology:
+      - dockerfile
+  patterns:
+    - pattern-regex: FR\w+\s[a-zA-Z0-9]\w+\:+\w+
+    - pattern-not: FROM gcr.io/distroless/static-debian10
+    - pattern-not-regex: \s*\#.*
+    - pattern-not-inside: FROM $IMAGE:$TAG as builder
+  paths:
+    exclude:
+      - "./vendor/*"

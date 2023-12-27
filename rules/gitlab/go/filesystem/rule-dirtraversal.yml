@@ -1,0 +1,37 @@
+# yamllint disable
+# License: Apache 2.0 (c) gosec
+# source (original): https://github.com/securego/gosec/blob/master/rules/directory-traversal.go
+# yamllint enable
+---
+rules:
+- id: "go_filesystem_rule-dirtraversal"
+  languages:
+  - "go"
+  patterns:
+  - pattern-either:
+    - pattern: |
+        import $NET "net/http"
+        ...
+        $NET.Dir("/")
+    - pattern: |
+        import "net/http"
+        ...
+        http.Dir("/")
+  message: |
+    The application is potentially exposing the entire filesystem by mounting the root
+    directory `/` to an HTTP handler function. Anyone who is able to access this HTTP
+    server may be able to access any file that the HTTP server has access to.
+
+    Restrict the `http.Dir` path to only a specific folder instead of the entire
+    filesystem.
+
+    Example server only allowing directory listing on a public directory:
+    ```
+    const path = "/var/www/html/public"
+    fs := http.FileServer(http.Dir(path))
+    log.Fatal(http.ListenAndServe(":9000", fs))
+    ```
+  metadata:
+    shortDescription: "Relative path traversal"
+    cwe: "CWE-23"
+  severity: "WARNING"

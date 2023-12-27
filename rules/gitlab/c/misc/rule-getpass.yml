@@ -1,0 +1,28 @@
+# yamllint disable
+# The ruleset is generated from flawfinder official rule repository hosted on github.
+# License: GPL 2.0 (c) 1989, 1991 Free Software Foundation, Inc.
+# source: https://github.com/david-a-wheeler/flawfinder/blob/e0d8827c3b714a883ce8036edc832721f4619524/flawfinder.py
+# yamllint enable
+---
+rules:
+- id: "c_misc_rule-getpass"
+  languages:
+  - "c"
+  message: |
+    This function is obsolete and not portable. It was in SUSv2 but removed by POSIX.2. What
+    it does exactly varies considerably between systems, particularly in where its prompt is
+    displayed and where it gets its data. Some systems will write to stderr instead of stdout.
+    Some will read from stdin if it can not be read from /dev/tty. In some systems the
+    buffer is static and limited to 127 characters, meaning the full password may not be returned
+    properly.
+
+    If you want to read input without terminal echoing enabled, see the description of the ECHO
+    flag
+    in the termios manual pager. If you ever read passwords from a terminal, be sure to zero the
+    password as soon as possible, to avoid leaving the cleartext password visible in the
+    process' address space.
+  metadata:
+    shortDescription: "Usage of deprecated function (getpass)"
+    cwe: "CWE-20"
+  pattern: "getpass(...)"
+  severity: "ERROR"

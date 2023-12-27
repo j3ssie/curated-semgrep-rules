@@ -1,0 +1,29 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "java_xml_rule-SAMLIgnoreComments"
+  languages:
+  - "java"
+  message: |
+    SAML parses attestations as an XML document. By processing XML comments,
+    comment fields can end up modifying the interpretation of input fields.
+    This could allow an adversary to insert an XML comment to break up the attestation's
+    username or other fields, allowing an attacker to bypass authorization or authentication
+    checks.
+
+    To remediate this issue, when using `org.opensaml.xml.parse.BasicParserPool` ensure
+    `setIgnoreComments(true)` is called.
+
+    For more information on how this issue can be exploited see:
+    https://developer.okta.com/blog/2018/02/27/a-breakdown-of-the-new-saml-authentication-bypass-vulnerability
+
+    For more information on SAML security see OWASP:
+    https://cheatsheetseries.owasp.org/cheatsheets/SAML_Security_Cheat_Sheet.html
+  metadata:
+    shortDescription: "Improper authentication"
+    cwe: "CWE-287"
+    category: "security"
+  pattern: "(BasicParserPool $POOL).setIgnoreComments(false);"
+  severity: "WARNING"

@@ -1,0 +1,21 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_crypto_rule-HazelcastSymmetricEncryption"
+  languages:
+  - "scala"
+  message: |
+    The network communications for Hazelcast is configured to use a symmetric cipher (probably DES
+    or Blowfish). Those ciphers alone do not provide integrity or secure authentication. The use of
+    asymmetric encryption is preferred.
+  metadata:
+    category: "security"
+    cwe: "CWE-326"
+    shortDescription: "Inadequate Encryption Strength"
+    technology:
+    - "scala"
+  patterns:
+  - pattern: "new com.hazelcast.config.SymmetricEncryptionConfig()"
+  severity: "WARNING"

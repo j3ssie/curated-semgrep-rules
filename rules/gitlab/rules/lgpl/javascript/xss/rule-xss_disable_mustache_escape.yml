@@ -1,0 +1,17 @@
+# yamllint disable
+# License: GNU Lesser General Public License v3.0
+# source (original): https://github.com/ajinabraham/njsscan/blob/master/njsscan/rules/semantic_grep/xss/xss_mustache_escape.yaml
+# hash: e7a0a61
+# yamllint enable
+---
+rules:
+- id: "rules_lgpl_javascript_xss_rule-xss-disable-mustache-escape"
+  pattern: "$OBJ.escapeMarkup = false"
+  severity: "WARNING"
+  languages:
+  - "javascript"
+  metadata:
+    owasp: "A7:2017-Cross-Site Scripting (XSS)"
+    cwe: "CWE-116: Improper Encoding or Escaping of Output"
+  message: |
+    Markup escaping disabled. This can be used with some template engines to escape disabling of HTML entities, which can lead to XSS attacks.

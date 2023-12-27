@@ -1,0 +1,38 @@
+# yamllint disable
+# License: GNU Lesser General Public License v3.0
+# source (original): https://github.com/ajinabraham/njsscan/blob/master/njsscan/rules/semantic_grep/jwt/jwt_none_algorithm.yaml
+# hash: e7a0a61
+# yamllint enable
+---
+rules:
+- id: "rules_lgpl_javascript_jwt_rule-node-jwt-none-algorithm"
+  patterns:
+  - pattern-either:
+    - pattern: |
+        $JWT = require("jsonwebtoken")
+        ...
+        $T = $JWT.verify($P, $X, {algorithms:[...,'none',...]},...)
+    - pattern: |
+        $JWT = require("jsonwebtoken")
+        ...
+        $JWT.verify($P, $X, {algorithms:[...,'none',...]},...)
+    - pattern: |
+        $JOSE = require("jose")
+        ...
+        var { JWK, JWT } = $JOSE;
+        ...
+        $T = JWT.verify($P, JWK.None,...)
+    - pattern: |
+        $JOSE = require("jose")
+        ...
+        var { JWK, JWT } = $JOSE;
+        ...
+        JWT.verify($P, JWK.None,...)
+  message: |
+    Algorithm is set to none for JWT token. This can nullify the integrity of JWT signature.
+  languages:
+  - "javascript"
+  severity: "ERROR"
+  metadata:
+    owasp: "A9:2017-Using Components with Known Vulnerabilities"
+    cwe: "CWE-327: Use of a Broken or Risky Cryptographic Algorithm"

@@ -1,0 +1,34 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_inject_rule-ELInjection"
+  languages:
+  - "scala"
+  message: |
+    An expression is built with a dynamic value. The source of the value(s) should be verified to
+    avoid that unfiltered values fall into this risky code evaluation.
+  metadata:
+    category: "security"
+    cwe: "CWE-94"
+    shortDescription: "Improper Control of Generation of Code ('Code Injection')"
+    technology:
+    - "scala"
+  patterns:
+  - pattern-inside: |
+      import javax.el._
+      ...
+  - pattern-either:
+    - pattern-inside: |
+        def $FUNC(..., $EXPR: String, ...) : $TYPE = {
+          ...
+        }
+    - pattern-inside: |
+        def $FUNC(..., $EXPR: String, ...) = {
+          ...
+        }
+  - pattern-either:
+    - pattern: "$X.createValueExpression(..., $EXPR, ...)"
+    - pattern: "$X.createMethodExpression(..., $EXPR, ...)"
+  severity: "WARNING"

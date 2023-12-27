@@ -1,0 +1,43 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "python_exec_rule-subprocess-popen-shell-true"
+  languages:
+  - "python"
+  patterns:
+  - patterns:
+    - pattern-not-inside: |
+        ...
+        $ARG = '...'.format('...')
+        ...
+    - pattern: "subprocess.$FUNC($ARG, ...)"
+    - pattern-not: "subprocess.$FUNC('...', ...)"
+    - pattern-not: "subprocess.$FUNC('...' % '...', ...)"
+    - pattern-not: "subprocess.$FUNC('...'.format('...'), ...)"
+  - pattern-either:
+    - pattern: "subprocess.$FUNC(..., shell=True, ...)"
+    - pattern: "subprocess.$FUNC(..., shell=[$V, ...], ...)"
+    - pattern: "subprocess.$FUNC(..., shell={$K: $V, ...}, ...)"
+    - patterns:
+      - pattern: "subprocess.$FUNC(..., shell=$INTVAL, ...)"
+      - pattern-not: "subprocess.$FUNC(..., shell=0, ...)"
+      - metavariable-regex:
+          metavariable: "$INTVAL"
+          regex: "^[0-9]+$"
+    - patterns:
+      - pattern: "subprocess.$FUNC(..., shell='$STRVAL', ...)"
+      - pattern-not: "subprocess.$FUNC(..., shell='', ...)"
+  message: |
+    Found `subprocess` function `$FUNC` with `shell=True`. This is dangerous because this call will
+    spawn the command using a shell process. Doing so propagates current shell settings and
+    variables,
+    which makes it much easier for a malicious actor to execute commands. Use `shell=False`
+    instead.
+  metadata:
+    cwe: "CWE-78"
+    owasp: "A1:2017-Injection"
+    shortDescription: "Improper Neutralization of Special Elements used in an OS Command
+      ('OS Command Injection')"
+  severity: "ERROR"

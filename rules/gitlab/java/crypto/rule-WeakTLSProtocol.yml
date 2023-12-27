@@ -1,0 +1,43 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "java_crypto_rule-WeakTLSProtocol"
+  languages:
+  - "java"
+  patterns:
+  - pattern-either:
+    - pattern: "new org.apache.http.impl.client.DefaultHttpClient();"
+    - pattern: "javax.net.ssl.SSLContext.getInstance(\"SSL\");"
+  message: |
+    The `org.apache.http.impl.client.DefaultHttpClient` and `javax.net.ssl.SSLContext.getInstance`
+    object instances do not verify the hostnames upon connection.
+
+    This allows for an adversary who is in between the application and the target host to intercept
+    potentially sensitive information or transmit malicious data.
+
+    Do not use the `org.apache.http.impl.client.DefaultHttpClient();` as it is deprecated. Instead
+    use the new `java.net.http.HttpClient` that was introduced in Java 9.
+
+    Example connecting to a host that will automatically do TLS validation:
+    ```
+    // Create a new java.net.http.HttpClient
+    HttpClient httpClient = HttpClient.newHttpClient();
+    // Create a HttpRequest builder
+    HttpRequest request = HttpRequest.newBuilder()
+            // Create a URI for a website which requires TLS
+            .uri(URI.create("https://www.example.com/"))
+            // Build the request
+            .build();
+
+    // Use the httpClient to send the request and use an HttpResponse.BodyHandlers String type
+    HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+    // Debug print
+    System.out.println(response);
+    ```
+  metadata:
+    shortDescription: "Improper certificate validation"
+    category: "security"
+    cwe: "CWE-295"
+  severity: "WARNING"

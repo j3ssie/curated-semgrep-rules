@@ -1,0 +1,46 @@
+# yamllint disable
+# License: Apchache 2.0 (c) gosec
+# source (original): https://github.com/securego/gosec/blob/master/rules/ssh.go
+# hash: 2a4064d 
+# yamllint enable
+---
+rules:
+- id: "go_crypto_rule-insecure-ignore-host-key"
+  languages:
+  - "go"
+  patterns:
+  - pattern: "ssh.InsecureIgnoreHostKey(...)"
+  message: |
+    The application was found to ignore host keys. Host keys are important as
+    they provide assurance that the client can prove that the host is trusted.
+    By ignoring these host keys, it is impossible for the client to validate the
+    connection is to a trusted host.
+
+    For the `ssh.ClientConfig` `HostKeyCallback` property, consider using the
+    [knownhosts](https://pkg.go.dev/golang.org/x/crypto/ssh/knownhosts) package that
+    parses OpenSSH's `known_hosts` key database.
+
+    Example configuration connecting to a known, trusted host:
+    ```
+    knownHostCallback, err := knownhosts.New("/home/user/.ssh/known_hosts")
+    if err != nil {
+      log.Fatal(err)
+    }
+
+    // Create client config using the knownHost callback function
+    config := &ssh.ClientConfig{
+      ...
+      HostKeyCallback: knownHostCallback,
+    }
+
+    // Connect to ssh server
+    conn, err := ssh.Dial("tcp", "localhost:22", config)
+    if err != nil {
+      log.Fatal("unable to connect: ", err)
+    }
+    defer conn.Close()
+    ```
+  metadata:
+    shortDescription: "Key exchange without entity authentication"
+    cwe: "CWE-322"
+  severity: "WARNING"

@@ -1,0 +1,33 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_endpoint_rule-JaxRsEndpoint"
+  languages:
+  - "scala"
+  message: |
+    This method is part of a REST Web Service (JSR311). The security of this web service should be
+    analyzed. For example:
+    - Authentication, if enforced, should be tested.
+    - Access control, if enforced, should be tested.
+    - The inputs should be tracked for potential vulnerabilities.
+    - The communication should ideally be over SSL.
+    - If the service supports writes (e.g., via POST), its vulnerability to CSRF should be
+    investigated.
+  metadata:
+    category: "security"
+    cwe: "CWE-20"
+    shortDescription: "Improper Input Validation"
+    technology:
+    - "scala"
+  mode: "taint"
+  pattern-sinks:
+  - pattern: "<...$VAR...>"
+  pattern-sources:
+  - patterns:
+    - pattern-inside: |
+        @javax.ws.rs.Path("...")
+        def $FUNC(..., $VAR: $TYPE, ...) = ...
+    - pattern: "$VAR"
+  severity: "INFO"

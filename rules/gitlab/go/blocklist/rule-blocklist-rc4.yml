@@ -1,0 +1,110 @@
+# yamllint disable
+# License: Apache 2.0 (c) gosec
+# source (original): https://github.com/securego/gosec/blob/master/rules/blocklist.go
+# yamllint enable
+---
+rules:
+- id: "go_blocklist_rule-blocklist-rc4"
+  languages:
+  - "go"
+  patterns:
+  - pattern: |
+      import "crypto/rc4"
+  message: |
+    The RC4 stream-cipher has been cryptographically broken and is unsuitable
+    for use in production. It is recommended that ChaCha20 or Advanced Encryption
+    Standard (AES) be used instead. Consider using `XChaCha20Poly1305` or `AES-256-GCM`.
+
+    For older applications, `AES-256-GCM` is recommended, however it has many drawbacks:
+    - Slower than `XChaCha20Poly1305`
+    - Smaller nonce value size compared to `XChaCha20Poly1305`
+    - Catastrophic failure if nonce values are re-used
+
+    Example using
+    [XChaCha20Poly1305](https://pkg.go.dev/golang.org/x/crypto/chacha20poly1305#NewX):
+    ```
+    key := make([]byte, chacha20poly1305.KeySize)
+    if _, err := io.ReadFull(rand.Reader, key); err != nil {
+      log.Fatal(err)
+    }
+
+    // NewX is a variant that uses longer nonce values for better security
+    aead, err := chacha20poly1305.NewX(key)
+    if err != nil {
+      log.Fatal(err)
+    }
+
+    var encrypted = []byte{}
+    var nonce = []byte{}
+
+    // Encryption routine
+    {
+      msg := []byte("Some secret message")
+      nonce = make([]byte, aead.NonceSize())
+      if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
+        log.Fatal("failed to generate nonce")
+      }
+
+      encrypted = aead.Seal(nil, nonce, msg, nil)
+    }
+
+    // Decryption routine
+    {
+      if len(encrypted) < aead.NonceSize() {
+        log.Fatal("incorrect ciphertext length")
+      }
+
+      msg, err := aead.Open(nil, nonce, encrypted, nil)
+      if err != nil {
+        log.Fatal(err)
+      }
+      fmt.Printf("Decrypted: %s\n", msg)
+    }
+    ```
+
+    Example using [AES-256-GCM](https://pkg.go.dev/crypto/cipher#NewGCM):
+    ```
+    // 32 byte keys will configure AES-256
+    key := make([]byte, 32)
+    if _, err := io.ReadFull(rand.Reader, key); err != nil {
+      log.Fatal(err)
+    }
+
+    blockCipher, err := aes.NewCipher(key)
+    if err != nil {
+      log.Fatal(err)
+    }
+
+    aead, err := cipher.NewGCM(blockCipher)
+    if err != nil {
+      log.Fatal(err)
+    }
+
+    var encrypted = []byte{}
+    var nonce = []byte{}
+    // Encryption routine
+    {
+      msg := []byte("Some secret message")
+      // note that the key must be rotated every 2^32 random nonces used otherwise
+      // cipher text could be repeated
+      nonce = make([]byte, 12)
+      if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
+        log.Fatal(err)
+      }
+      encrypted = aead.Seal(nil, nonce, msg, nil)
+    }
+
+    // Decryption routine
+    {
+      msg, err := aead.Open(nil, nonce, encrypted, nil)
+      if err != nil {
+        log.Fatal(err)
+      }
+      fmt.Printf("Decrypted: %s\n", msg)
+    }
+    ```
+  metadata:
+    shortDescription: "Use of a broken or risky cryptographic algorithm"
+    cwe: "CWE-327"
+    owasp: "A9:2017-Using Components with Known Vulnerabilities"
+  severity: "WARNING"

@@ -1,0 +1,33 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_xxe_rule-Trans"
+  languages:
+  - "scala"
+  message: |
+    XML External Entity (XXE) attacks can occur when an XML parser supports XML
+    entities while processing XML received from an untrusted source.
+  metadata:
+    category: "security"
+    cwe: "CWE-611"
+    shortDescription: "Improper Restriction of XML External Entity Reference ('XXE')"
+  mode: "taint"
+  pattern-sanitizers:
+  - pattern: "$T.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, \"\");"
+  - pattern: "$T.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, \"\");"
+  - pattern: "$T.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);"
+  pattern-sinks:
+  - pattern: "$T.transform(...)"
+  pattern-sources:
+  - patterns:
+    - pattern-either:
+      - pattern-inside: |-
+          import javax.xml.transform._
+          ...
+      - pattern-inside: |-
+          import javax.xml.transform.Transformer
+          ...
+    - pattern: "$FACT.newTransformer"
+  severity: "ERROR"

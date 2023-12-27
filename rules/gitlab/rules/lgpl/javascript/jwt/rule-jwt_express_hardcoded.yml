@@ -1,0 +1,37 @@
+# yamllint disable
+# License: GNU Lesser General Public License v3.0
+# source (original): https://github.com/ajinabraham/njsscan/blob/master/njsscan/rules/semantic_grep/jwt/jwt_express_hardcoded.yaml
+# hash: e7a0a61
+# yamllint enable
+---
+rules:
+- id: "rules_lgpl_javascript_jwt_rule-jwt-express-hardcoded"
+  patterns:
+  - pattern-inside: |
+      $JWT = require('express-jwt')
+      ...
+  - pattern-either:
+    - pattern: |
+        $JWT(<... {secret: "..."} ...>,...)
+    - pattern: |
+        $SECRET = "...";
+        ...
+        $JWT(<... {secret: $SECRET} ...>,...)
+    - pattern: |
+        $OPTS = <... {secret: "..."} ...>;
+        ...
+        $JWT($OPTS,...)
+    - pattern: |-
+        $SECRET = "...";
+        ...
+        $OPTS = <... {secret: $SECRET} ...>;
+        ...
+        $JWT($OPTS,...)
+  message: |
+    Hardcoded JWT secret or private key was found. Store it properly in  an environment variable.
+  severity: "ERROR"
+  languages:
+  - "javascript"
+  metadata:
+    owasp: "A2:2017-Broken Authentication"
+    cwe: "CWE-522: Insufficiently Protected Credentials"

@@ -1,0 +1,35 @@
+# yamllint disable
+# The ruleset is generated from flawfinder official rule repository hosted on github.
+# License: GPL 2.0 (c) 1989, 1991 Free Software Foundation, Inc.
+# source: https://github.com/david-a-wheeler/flawfinder/blob/e0d8827c3b714a883ce8036edc832721f4619524/flawfinder.py
+# yamllint enable
+---
+rules:
+- id: "c_shell_rule-execl-execlp"
+  languages:
+  - "c"
+  message: |
+    It is generally not recommended to call out to the operating system to execute commands.
+    When the application is executing file system based commands, user input should never be used
+    in
+    constructing commands or command arguments. If possible, determine if a library can be used
+    instead to provide the same functionality. Otherwise, consider hard coding both the command
+    and arguments to be used, or at the very least restricting which arguments can be passed
+    to the command execution function.
+
+    Please see the compliant solutions in the following page:
+    https://wiki.sei.cmu.edu/confluence/pages/viewpage.action?pageId=87152177
+  metadata:
+    shortDescription: "Potential for OS command injection"
+    cwe: "CWE-78"
+    owasp: "A1:2017-Injection"
+  pattern-either:
+  - pattern: "execl(...)"
+  - pattern: "execlp(...)"
+  - pattern: "execle(...)"
+  - pattern: "execv(...)"
+  - pattern: "execvp(...)"
+  - pattern: "popen(...)"
+  - pattern: "WinExec(...)"
+  - pattern: "ShellExecute(...)"
+  severity: "ERROR"

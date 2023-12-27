@@ -1,0 +1,52 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_xml_rule-XsltTransform"
+  mode: "taint"
+  pattern-sources:
+  - patterns:
+    - pattern-either:
+      - patterns:
+        - pattern-inside: |
+            $FUNC(...,String $VAR, ...) {
+              ...
+            }
+        - pattern-either:
+          - pattern: "new FileInputStream(<... $VAR ...>);"
+          - pattern: "getClass.getResourceAsStream(<... $VAR ...>)"
+      - patterns:
+        - pattern-inside: |
+            class $CLZ {
+              String $X = "...";
+              ...
+            }
+        - pattern-inside: |
+            $FUNC(...,String $Y, ...) {
+              ...
+            }
+        - pattern-either:
+          - pattern: "new FileInputStream($X + $Y);"
+          - pattern: "getClass.getResourceAsStream($X + $Y)"
+  pattern-sinks:
+  - patterns:
+    - pattern-either:
+      - pattern-inside: |-
+          (javax.xml.transform.TransformerFactory $T).newTransformer($SRC, ...)
+      - pattern-inside: |-
+          (javax.xml.transform.Transformer $T).transform($SRC, ...)
+    - pattern: "$SRC"
+  languages:
+  - "java"
+  message: |
+    It is possible to attach malicious behavior to those style sheets. Therefore, if an attacker
+    can control the content or the source of the style sheet, he might be able to trigger remote
+    code execution.
+  metadata:
+    shortDescription: "Improper neutralization of special elements in output used
+      by a downstream component ('Injection')"
+    category: "security"
+    cwe: "CWE-74"
+  severity: "WARNING"

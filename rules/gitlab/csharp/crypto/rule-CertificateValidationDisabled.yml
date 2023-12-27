@@ -1,0 +1,40 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "csharp_crypto_rule-CertificateValidationDisabled"
+  languages:
+  - "csharp"
+  patterns:
+  - pattern-inside: |
+      using System.Net;
+      ...
+  - pattern: "ServicePointManager.ServerCertificateValidationCallback += $CALLBACK;"
+  - metavariable-pattern:
+      metavariable: "$CALLBACK"
+      patterns:
+      - pattern-either:
+        - pattern: "$RETURNTYPE $FUNC(...) { return true; }"
+        - pattern: "(...) => true;"
+  message: |
+    The `ServicePointManager.ServerCertificateValidationCallback` event has been set
+    to always return `true`, which effectively disables the validation of server
+    certificates.
+
+    This allows for an adversary who is in between the application and the target host to intercept
+    potentially sensitive information or transmit malicious data.
+
+    Remove the callback function that is returning true to allow normal certificate validation to
+    proceed.
+    When no callback is provided, the client will validate that the certificate name matches the
+    hostname
+    that was used when creating the request.
+
+    For more information on the `ServerCertificateValidationCallback` property see:
+    https://learn.microsoft.com/en-us/dotnet/api/system.net.servicepointmanager.servercertificatevalidationcallback
+  severity: "WARNING"
+  metadata:
+    shortDescription: "Certificate validation disabled"
+    category: "security"
+    cwe: "CWE-295"

@@ -1,0 +1,24 @@
+rules:
+  - id: stage-build
+    languages: 
+      - dockerfile
+    message: >-
+      Missing multistage builds.
+    severity: INFO
+    metadata:
+      category: best-practice
+      technology:
+        - dockerfile
+    patterns:
+      - pattern: |
+          FROM $STAGE AS builder
+          ...
+      - pattern-not-inside: |
+          FROM $STAGE AS builder
+          ...
+          FROM $IMAGE
+          ...
+    paths:
+      exclude:
+        - "./vendor/*"
+

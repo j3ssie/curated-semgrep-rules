@@ -1,0 +1,25 @@
+# yamllint disable
+# License: Apache 2.0 (c) gosec
+# source (original): https://github.com/securego/gosec/blob/master/rules/math_big_rat.go
+# hash: c6e10af
+# yamllint enable
+---
+rules:
+- id: "go_memory_rule-math-big-rat"
+  languages:
+  - "go"
+  message: |
+    Potential Integer overflow made by strconv.Atoi result conversion to int16/32
+  metadata:
+    cwe: "CWE-190"
+    shortDescription: "Integer Overflow or Wraparound"
+  patterns:
+  - pattern-inside: |
+      import "math/big"
+      ...
+  - pattern-inside: |
+      $R = big.Rat{...}
+      ...
+  - pattern: |
+      $R.SetString(...)
+  severity: "ERROR"

@@ -1,0 +1,33 @@
+# yamllint disable
+# License: GNU Lesser General Public License v3.0
+# source (original): https://github.com/ajinabraham/njsscan/blob/master/njsscan/rules/semantic_grep/database/sequelize_tls_validation.yaml
+# hash: e7a0a61
+# yamllint enable
+---
+rules:
+- id: "rules_lgpl_javascript_database_rule-sequelize-tls-cert-validation"
+  message: |
+    'The Sequelize connection string indicates that TLS certificate vailidation of database server is disabled. This is equivalent to not having TLS. An attacker can present any invalid certificate and Sequelize will make database connection ignoring certificate errors. This setting make the connection susceptible to man in the middle (MITM) attacks. Not applicable to SQLite database.
+
+    '
+  severity: "ERROR"
+  languages:
+  - "javascript"
+  metadata:
+    owasp: "A6:2017-Security Misconfiguration"
+    cwe: "CWE-295: Improper Certificate Validation"
+  patterns:
+  - pattern: |
+      {
+        host: $HOST,
+        database: $DATABASE,
+        dialect: $DIALECT,
+        dialectOptions: {
+          ssl: {
+            rejectUnauthorized: false
+          }
+        }
+       }
+  - metavariable-regex:
+      metavariable: "$DIALECT"
+      regex: "['\"](mariadb|mysql|postgres)['\"]"

@@ -1,0 +1,42 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "python_exec_rule-start-process-with-no-shell"
+  languages:
+  - "python"
+  message: |
+    Found dynamic content when spawning a process. This is dangerous if externaldata can reach this
+    function call because it allows a malicious actor toexecute commands. Ensure no external data
+    reaches here.
+  metadata:
+    cwe: "CWE-78"
+    owasp: "A1:2017-Injection"
+    shortDescription: "Improper Neutralization of Special Elements used in an OS Command
+      ('OS Command Injection')"
+  patterns:
+  - pattern-either:
+    - patterns:
+      - pattern-not: "os.$W(\"...\", ...)"
+      - pattern-either:
+        - pattern: "os.execl(...)"
+        - pattern: "os.execle(...)"
+        - pattern: "os.execlp(...)"
+        - pattern: "os.execlpe(...)"
+        - pattern: "os.execv(...)"
+        - pattern: "os.execve(...)"
+        - pattern: "os.execvp(...)"
+        - pattern: "os.execvpe(...)"
+        - pattern: "os.startfile(...)"
+    - patterns:
+      - pattern-either:
+        - pattern: "os.spawnl(...)"
+        - pattern: "os.spawnle(...)"
+        - pattern: "os.spawnlp(...)"
+        - pattern: "os.spawnlpe(...)"
+        - pattern: "os.spawnv(...)"
+        - pattern: "os.spawnve(...)"
+        - pattern: "os.spawnvp(...)"
+        - pattern: "os.spawnvpe(...)"
+  severity: "WARNING"

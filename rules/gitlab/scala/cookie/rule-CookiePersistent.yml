@@ -1,0 +1,24 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_cookie_rule-CookiePersistent"
+  languages:
+  - "scala"
+  message: |
+    "Storing sensitive data in a persistent cookie for an extended period can lead to a breach of
+    confidentiality or account compromise."
+  metadata:
+    category: "security"
+    cwe: "CWE-614"
+    shortDescription: "Sensitive Cookie in HTTPS Session Without 'Secure' Attribute"
+    technology:
+    - "scala"
+  patterns:
+  - pattern: |
+      ($C: Cookie).setMaxAge($AGE)
+  - metavariable-comparison:
+      comparison: "$AGE >= 31536000"
+      metavariable: "$AGE"
+  severity: "WARNING"

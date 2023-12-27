@@ -1,0 +1,46 @@
+# yamllint disable
+# License: License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "go_crypto_rule-tlsversion"
+  languages:
+  - "go"
+  patterns:
+  - pattern-either:
+    - pattern: "tls.VersionTLS11"
+    - pattern: "tls.VersionTLS10"
+  message: |
+    TLS versions 1.1 and 1.0 were deprecated by the IETF in June 2018 due to a number of attacks
+    against
+    the vulnerable versions. Use of a deprecated TLS version may result in the unauthorized
+    retrieval
+    of sensitive information. It is strongly recommended that all TLS connections
+    use TLS 1.3 as Go will automatically choose the most secure cipher when negotiating the
+    TLS handshake with client or servers. TLS 1.3 cipher suites are configured to require Perfect
+    Forward Secrecy (PFS).
+    PFS is an important property as it will ensure that past encrypted transmissions could not be
+    decrypted
+    if the TLS certificate was compromised.
+
+    Example using TLS 1.3 for a Go server:
+    ```
+    cert, err := tls.LoadX509KeyPair("server.crt", "server.key")
+    if err != nil {
+      log.Fatal(err)
+    }
+
+    cfg := &tls.Config{Certificates: []tls.Certificate{cert}, MinVersion: tls.VersionTLS13}
+    srv := &http.Server{
+      Addr:         ":8999",
+      TLSConfig:    cfg,
+      ReadTimeout:  time.Minute,
+      WriteTimeout: time.Minute,
+    }
+    log.Fatal(srv.ListenAndServeTLS("", ""))
+    ```
+  metadata:
+    shortDescription: "Use of deprecated TLS version"
+    cwe: "CWE-310"
+    owasp: "A6:2017-Security Misconfiguration"
+  severity: "WARNING"

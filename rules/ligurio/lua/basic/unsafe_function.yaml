@@ -1,0 +1,13 @@
+rules:
+  - id: unsafe_function
+    pattern-either:
+      - pattern: os.execute(...)
+      - pattern: io.popen(...)
+      - pattern: loadstring(...)
+      - pattern: load(...)
+      - pattern: loadfile(...)
+      - pattern: dofile(...)
+      - pattern: os.remove(...)
+    message: Using unsafe function.
+    languages: [lua]
+    severity: WARNING

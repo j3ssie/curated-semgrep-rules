@@ -1,0 +1,82 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "python_sql_rule-hardcoded-sql-expression"
+  languages:
+  - "python"
+  message: |
+    SQL Injection is a critical vulnerability that can lead to data or system compromise. By
+    dynamically generating SQL query strings, user input may be able to influence the logic of
+    the SQL statement. This could lead to an adversary accessing information they should
+    not have access to, or in some circumstances, being able to execute OS functionality or code.
+
+    Replace all dynamically generated SQL queries with parameterized queries. In situations where
+    dynamic queries must be created, never use direct user input, but instead use a map or
+    dictionary of valid values and resolve them using a user supplied key.
+
+    For example, some database drivers do not allow parameterized queries for `>` or `<` comparison
+    operators. In these cases, do not use a user supplied `>` or `<` value, but rather have the
+    user
+    supply a `gt` or `lt` value. The alphabetical values are then used to look up the `>` and `<`
+    values to be used in the construction of the dynamic query. The same goes for other queries
+    where
+    column or table names are required but cannot be parameterized.
+
+    Example using `PreparedStatement` queries:
+    ```
+    import sqlite3
+
+    # Create a new database (in memory)
+    con = sqlite3.connect(":memory:")
+    # Get a cursor from the connection
+    cur = con.cursor()
+    # Create a tuple of the value to be used in the parameterized query
+    params = ('user-input',)
+    # execute the statement, passing in the params for the value
+    cur.execute("select name from sqlite_master where name = ?", params)
+    # work with the result
+    result = cur.fetchall()
+    ```
+
+    For more information on SQL Injection see OWASP:
+    https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html
+  metadata:
+    cwe: "CWE-89"
+    owasp: "A1:2017-Injection"
+    category: "security"
+    shortDescription: "Improper neutralization of special elements used in an SQL
+      Command ('SQL Injection')"
+  patterns:
+  - metavariable-regex:
+      metavariable: "$QUERY"
+      regex: "(?i)^(SELECT|INSERT|UPDATE|DELETE)\\s"
+  - pattern-not: "$DB.execute(\"...\")"
+  - pattern-either:
+    - pattern: "$DB.execute(\"$QUERY\" % ...)"
+    - pattern: "$DB.execute(\"$QUERY\".format(...))"
+    - pattern: "$DB.execute(f\"$QUERY\")"
+    - pattern: "$DB.execute(\"$QUERY\" + $V + ...)"
+    - patterns:
+      - pattern-either:
+        - pattern-inside: |
+            ...
+            $SQL = "$QUERY" % ...
+            ...
+        - pattern-inside: |
+            ...
+            $TMP = "$QUERY"
+            ...
+            $SQL = $TMP + "..." % ...
+            ...
+        - pattern-inside: |
+            ...
+            $SQL = "$QUERY".format(...)
+            ...
+        - pattern-inside: |
+            ...
+            $SQL = f"$QUERY"
+            ...
+      - pattern: "$DB.execute($SQL)"
+  severity: "WARNING"

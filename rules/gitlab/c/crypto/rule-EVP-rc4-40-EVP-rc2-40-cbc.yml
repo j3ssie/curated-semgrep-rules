@@ -1,0 +1,28 @@
+# yamllint disable
+# The ruleset is generated from flawfinder official rule repository hosted on github.
+# License: GPL 2.0 (c) 1989, 1991 Free Software Foundation, Inc.
+# source: https://github.com/david-a-wheeler/flawfinder/blob/e0d8827c3b714a883ce8036edc832721f4619524/flawfinder.py
+# yamllint enable
+---
+rules:
+- id: "c_crypto_rule-EVP-rc4-40-EVP-rc2-40-cbc"
+  languages:
+  - "c"
+  message: |
+    The RC4 algorithm is vulnerable to many attacks and should no longer be used for encrypting
+    data streams.
+
+    Consider using libsodium's `crypto_secretstream_xchacha20poly1305` stream cipher encryption
+    functions instead. For more information please see:
+    https://libsodium.gitbook.io/doc/secret-key_cryptography/secretstream
+
+    If you must be FIPS compliant, consider using OpenSSLs AES or 3DES ciphers.
+  metadata:
+    shortDescription: "Insecure stream cipher (RC4)"
+    cwe: "CWE-327"
+    owasp: "A3:2017-Sensitive Data Exposure"
+  pattern-either:
+  - pattern: "EVP_rc4_40(...)"
+  - pattern: "EVP_rc2_40_cbc(...)"
+  - pattern: "EVP_rc2_64_cbc(...)"
+  severity: "ERROR"

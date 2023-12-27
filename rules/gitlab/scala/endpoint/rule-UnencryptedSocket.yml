@@ -1,0 +1,19 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_endpoint_rule-UnencryptedSocket"
+  languages:
+  - "scala"
+  message: |
+    Beyond using an SSL socket, you need to make sure your use of SSLSocketFactory
+    does all the appropriate certificate validation checks to make sure you are not
+    subject to man-in-the-middle attacks. Please read the OWASP Transport Layer
+    Protection Cheat Sheet for details on how to do this correctly.
+  metadata:
+    cwe: "CWE-319"
+    shortDescription: "Cleartext Transmission of Sensitive Information"
+  patterns:
+  - pattern: "new java.net.Socket(...)"
+  severity: "WARNING"

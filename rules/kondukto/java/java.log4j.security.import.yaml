@@ -1,0 +1,24 @@
+rules:
+- id: log4j-message-lookup-injection
+  patterns:
+    - pattern-either:
+      - pattern: |
+          import org.apache.logging.log4j.$Y;
+  message: |
+      Possible Lookup injection into Log4j messages.  
+  languages: [java]
+  severity: WARNING
+  metadata: 
+      cwe: "CWE-74: Improper Neutralization of Special Elements in Output Used by a
+        Downstream Component ('Injection')"
+      owasp: "A1: Injection"
+      source-rule-url: https://www.lunasec.io/docs/blog/log4j-zero-day/
+      references:
+        - https://issues.apache.org/jira/browse/LOG4J2-3198
+        - https://www.lunasec.io/docs/blog/log4j-zero-day/
+        - https://logging.apache.org/log4j/2.x/manual/lookups.html
+      category: security
+      technology:
+        - java
+      license: Commons Clause License Condition v1.0[LGPL-2.1-only]
+      

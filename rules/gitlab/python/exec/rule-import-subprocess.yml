@@ -1,0 +1,18 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "python_exec_rule-import-subprocess"
+  languages:
+  - "python"
+  message: |
+    Consider possible security implications associated with subprocess module.
+  metadata:
+    cwe: "CWE-78"
+    owasp: "A8:2017-Insecure Deserialization"
+    shortDescription: "Improper Neutralization of Special Elements used in an OS Command
+      ('OS Command Injection')"
+  patterns:
+  - pattern: "import subprocess"
+  severity: "WARNING"

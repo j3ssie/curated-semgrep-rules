@@ -1,0 +1,81 @@
+# yamllint disable
+# License: Apache 2.0 (c) gosec
+# source (original): https://github.com/securego/gosec/blob/master/rules/implicit_aliasing.go
+# yamllint enable
+---
+rules:
+- id: "go_memory_rule-memoryaliasing"
+  languages:
+  - "go"
+  patterns:
+  - pattern-either:
+    - pattern: |
+        for ..., $ARG := range $SLICE {
+          <... &($ARG) ...>
+        }
+    - pattern: |
+        for ..., $ARG := range $SLICE {
+          <... func() { <... &$ARG ...> } ...>
+        }
+    - pattern: |
+        for ..., $ARG := range $SLICE {
+          <... $X(..., <... &$ARG ...>, ...) ...>
+        }
+  - pattern-not: |
+      for ..., $ARG := range $SLICE {
+        <... *$ARG ...>
+      }
+  - pattern-not-inside: |-
+      for ..., $ARG := range $SLICE { return ... }
+  message: |
+    Go's `for ... range` statements create an iteration variable for each iteration of the loop.
+    By taking the address of this iteration variable, the value of the address will be re-used
+    and always point to the same location in memory. This can have unexpected behavior if the
+    address is stored or re-used.
+
+    This can be fixed by:
+    - Not referencing the address of the variable
+    - Re-assigning the iteration variable to a new variable
+    - Using the address of the indexed variable
+
+    Example not referencing the address:
+    ```
+    type someStruct struct {
+      x int
+    }
+
+    for _, n := range []someStruct{{1}, {2}, {3}, {4}} {
+      fmt.Printf("%d\n", n.x)
+    }
+    ```
+
+    Example reassigning the iteration variable to a new variable:
+    ```
+    type someStruct struct {
+      x int
+    }
+
+    for _, n := range []someStruct{{1}, {2}, {3}, {4}} {
+      p := n
+      fmt.Printf("%p\n", &p)
+    }
+    ```
+
+    Example using the address of the indexed variable:
+    ```
+    type someStruct struct {
+      x int
+    }
+
+    structData := []someStruct{{1}, {2}, {3}, {4}}
+    for idx := range structData {
+      fmt.Printf("%p\n", &structData[idx])
+    }
+    ```
+
+    For more information on how the `for ... range` statement works see:
+    https://go.dev/ref/spec#For_statements
+  metadata:
+    shortDescription: "Incorrect access of indexable resource ('Range Error')"
+    cwe: "CWE-118"
+  severity: "WARNING"

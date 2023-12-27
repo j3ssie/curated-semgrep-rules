@@ -1,0 +1,22 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "python_exec_rule-paramiko-calls"
+  languages:
+  - "python"
+  message: |
+    Unverified SSL context detected. This will permit insecure connections without `verifyingSSL`
+    certificates. Use `ssl.create_default_context()` instead.
+  metadata:
+    cwe: "CWE-78"
+    owasp: "A1:2017-Injection"
+    shortDescription: "Improper Neutralization of Special Elements used in an OS Command
+      ('OS Command Injection')"
+  patterns:
+  - pattern-inside: |
+      import paramiko
+      ...
+  - pattern: "$CLIENT.exec_command(...)"
+  severity: "WARNING"

@@ -1,0 +1,45 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_endpoint_rule-InsecureServlet"
+  languages:
+  - "scala"
+  message: |
+    The Servlet can read GET and POST parameters from various methods. The
+    value obtained should be considered unsafe."
+  metadata:
+    category: "security"
+    cwe: "CWE-20"
+    shortDescription: "Improper Input Validation"
+  mode: "taint"
+  pattern-sanitizers:
+  - pattern: "Encode.forHtml(...)"
+  - pattern: "org.owasp.esapi.Encoder.encodeForSQL(...)"
+  pattern-sinks:
+  - patterns:
+    - pattern-either:
+      - pattern: |
+          ... + $PAR
+      - pattern: |
+          ... + $PAR + ...
+      - pattern: |
+          $PAR + ...
+    - pattern: "$PAR"
+  pattern-sources:
+  - pattern-either:
+    - pattern: "($REQ: HttpServletRequest).getContentType"
+    - pattern: "($REQ: HttpServletRequest).getServerName"
+    - pattern: "($REQ: HttpServletRequest).getRequestedSessionId"
+    - pattern: "($REQ: HttpServletRequest).getParameterValues(...)"
+    - pattern: "($REQ: HttpServletRequest).getParameterMap"
+    - pattern: "($REQ: HttpServletRequest).getParameterNames"
+    - pattern: "($REQ: HttpServletRequest).getParameter(...)"
+    - patterns:
+      - pattern-inside: |
+          ($REQ: HttpServletRequest).getSession
+      - pattern: "$SESS.getAttribute(\"...\")"
+    - pattern: |
+        ($REQ: HttpServletRequest).getSession.getAttribute("...")
+  severity: "WARNING"

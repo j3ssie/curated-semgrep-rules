@@ -1,0 +1,46 @@
+# yamllint disable
+# License: Apache 2.0 (c) gosec
+# source (original): https://github.com/securego/gosec/blob/master/rules/integer_overflow.go
+# hash: c6e10af 
+# yamllint enable
+---
+rules:
+- id: "go_memory_rule-integer-overflow"
+  languages:
+  - "go"
+  patterns:
+  - pattern-either:
+    - patterns:
+      - pattern-inside: |
+          $X, ... := strconv.Atoi(...)
+          ...
+      - pattern-either:
+        - pattern: "int32($X)"
+        - pattern: "int16($X)"
+  message: |
+    Golang's `int` type size depends on the architecture of where the application is running. For
+    32-bit systems, `int` is
+    32-bit, for 64-bit systems, `int` will be 64-bit. By calling `strconv.Atoi` with a large
+    number, the integer may overflow
+    if the `int` return value is type converted into a smaller type (`int32` or `int16`). This
+    could cause unexpected application
+    behavior depending on how the resultant value is used.
+
+    Prior to running any type conversion, check that the value returned from `strconv.Atoi` will
+    fit in the resulting integer.
+
+    Example of checking the return value before type conversion:
+    ```
+    bigValue, _ := strconv.Atoi("32768")
+    if bigValue > math.MaxInt16 {
+      log.Fatal("value too large to fit in int16")
+    }
+    value := int16(bigValue)
+    fmt.Println(value)
+    ```
+
+    For more information on integer min/max constants see: https://pkg.go.dev/math#pkg-constants
+  metadata:
+    shortDescription: "Integer overflow or wraparound"
+    cwe: "CWE-190"
+  severity: "ERROR"

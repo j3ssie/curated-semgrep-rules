@@ -1,0 +1,19 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_crypto_rule-DefaultHTTPClient"
+  patterns:
+  - pattern: "new org.apache.http.impl.client.DefaultHttpClient(...)"
+  message: |
+    DefaultHttpClient with default constructor is not compatible with TLS 1.2
+  languages:
+  - "scala"
+  severity: "WARNING"
+  metadata:
+    shortDescription: "Inadequate encryption strength"
+    category: "security"
+    cwe: "CWE-326"
+    technology:
+    - "scala"

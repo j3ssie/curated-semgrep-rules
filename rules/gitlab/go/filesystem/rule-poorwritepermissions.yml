@@ -1,0 +1,40 @@
+# yamllint disable
+# License: Apache 2.0 (c) gosec
+# source (original): https://github.com/securego/gosec/blob/master/rules/fileperms.go
+# yamllint enable
+---
+rules:
+- id: "go_filesystem_rule-poorwritepermissions"
+  languages:
+  - "go"
+  patterns:
+  - pattern-either:
+    - pattern: |
+        ioutil.WriteFile(..., ..., $ARG)
+  - metavariable-comparison:
+      metavariable: "$ARG"
+      comparison: "$ARG > 0o600"
+      base: 8
+  message: |
+    The application was found setting file permissions to overly permissive values. Consider
+    using the following values if the application user is the only process to access
+    the file:
+
+    - 0400 - read only access to the file
+    - 0200 - write only access to the file
+    - 0600 - read/write access to the file
+
+    Example writing file contents with read/write permissions for the application user:
+    ```
+    dat := []byte("sensitive data")
+    if err := os.WriteFile("file.txt", dat, 0600); err != nil {
+      log.Fatal(err)
+    }
+    ```
+
+    For all other values please see:
+    https://en.wikipedia.org/wiki/File-system_permissions#Numeric_notation
+  metadata:
+    shortDescription: "Incorrect default permissions"
+    cwe: "CWE-276"
+  severity: "WARNING"

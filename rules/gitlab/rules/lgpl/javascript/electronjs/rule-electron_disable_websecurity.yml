@@ -1,0 +1,22 @@
+# yamllint disable
+# License: GNU Lesser General Public License v3.0
+# source (original): https://github.com/ajinabraham/njsscan/blob/master/njsscan/rules/semantic_grep/electronjs/security_electron.yaml
+# hash: e7a0a61
+# yamllint enable
+---
+rules:
+- id: "rules_lgpl_javascript_electronjs_rule-electron-disable-websecurity"
+  patterns:
+  - pattern-either:
+    - pattern: |
+        new BrowserWindow({webPreferences: {webSecurity: false}})
+    - pattern: |
+        var $X = {webPreferences: {webSecurity: false}};
+  message: |
+    Disabling webSecurity will disable the same-origin policy and allows the execution of insecure code from any domain.
+  languages:
+  - "javascript"
+  severity: "ERROR"
+  metadata:
+    owasp: "A6:2017-Security Misconfiguration"
+    cwe: "CWE-346: Origin Validation Error"

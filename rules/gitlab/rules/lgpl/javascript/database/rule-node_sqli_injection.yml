@@ -1,0 +1,51 @@
+# yamllint disable
+# License: GNU Lesser General Public License v3.0
+# source (original): https://github.com/ajinabraham/njsscan/blob/master/njsscan/rules/semantic_grep/database/sql_injection.yaml
+# hash: e7a0a61
+# yamllint enable
+---
+rules:
+- id: "rules_lgpl_javascript_database_rule-node-sqli-injection"
+  patterns:
+  - pattern-inside: |
+      require('$LIB')
+      ...
+  - metavariable-regex:
+      metavariable: "$LIB"
+      regex: "\\b(sql-client|mysql|pg|mssql|oracledb|sequelize)\\b"
+  - pattern-not: |
+      $CON.query("..." + "...", ...)
+  - pattern-not: |
+      $SQL = "...";
+      ...
+      $CON.query(<... $SQL ...>, ...)
+  - pattern-either:
+    - pattern: |
+        $CON.query(<... $REQ.$QUERY ...>, ...)
+    - pattern: |
+        $SQL = <... $REQ.$QUERY ...>;
+        ...
+        $CON.query(<... $SQL ...>, ...)
+    - pattern: |
+        $INP = <... $REQ.$QUERY ...>;
+        ...
+        $SQL = <... $INP ...>;
+        ...
+        $CON.query(<... $SQL ...>, ...)
+    - pattern: |
+        $CON.query(`...${...}...`, ...)
+    - pattern: |
+        $CON.query("..."+...+"...", ...)
+    - pattern: |
+        $SQL = <... $INP ...>;
+        ...
+        $CON.query(<... $SQL ...>, ...)
+  message: |
+    Untrusted input concatinated with raw SQL query can result in SQL Injection.
+  languages:
+  - "javascript"
+  severity: "ERROR"
+  metadata:
+    owasp: "A1:2017-Injection"
+    cwe: "CWE-89: Improper Neutralization of Special Elements used in an SQL Command
+      (SQL Injection)"

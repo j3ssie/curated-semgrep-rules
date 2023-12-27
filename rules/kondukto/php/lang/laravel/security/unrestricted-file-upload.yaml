@@ -1,0 +1,25 @@
+rules:
+- id: unrestricted-file-upload
+  metadata:
+    cwe: 'CWE-434'
+    owasp: 'A1: Injection'
+    references:
+      - https://owasp.org/www-community/vulnerabilities/Unrestricted_File_Upload
+  patterns:
+    - pattern-either:
+      - pattern: |
+            $FUNC($X,...);
+            ...
+            $R = $E->putFileAs(..., $X,...);
+            ...
+      - pattern: |
+            $Y = $X->file(...);
+            ...
+            $R->putFileAs(..., $Y,...);
+ 
+
+  message: |
+    `$X` is saved without proper sanitization which could lead the client to uploading malicious
+    file(s) to the server.
+  languages: [php]
+  severity: WARNING

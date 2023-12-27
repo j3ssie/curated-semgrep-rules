@@ -1,0 +1,74 @@
+# yamllint disable
+# License: GNU Lesser General Public License v3.0
+# source (original): https://github.com/ajinabraham/njsscan/blob/master/njsscan/rules/semantic_grep/database/sql_injection_knex.yaml
+# hash: e7a0a61
+# yamllint enable
+---
+rules:
+- id: "rules_lgpl_javascript_database_rule-node-knex-sqli-injection"
+  patterns:
+  - pattern-either:
+    - pattern-inside: |
+        $KNEX = require('knex')
+        ...
+    - pattern-inside: |
+        $KNEX = require('knex')(...)
+        ...
+  - pattern-either:
+    - pattern: |
+        $K.raw(<... $REQ.$QUERY.$VAR ...>, ...)
+    - pattern: |
+        $K.raw(<... $REQ.$QUERY ...>, ...)
+    - pattern: |
+        $SQL = <... $REQ.$QUERY.$VAR ...>;
+        ...
+        $K.raw(<... $SQL ...>, ...)
+    - pattern: |
+        $SQL = <... $REQ.$QUERY ...>;
+        ...
+        $K.raw(<... $SQL ...>, ...)
+    - pattern: |
+        $INP = <... $REQ.$QUERY.$VAR ...>;
+        ...
+        $SQL = <... $INP ...>;
+        ...
+        $K.raw(<... $SQL ...>, ...)
+    - pattern: |
+        $INP = <... $REQ.$QUERY ...>;
+        ...
+        $SQL = <... $INP ...>;
+        ...
+        $K.raw(<... $SQL ...>, ...)
+    - pattern: |
+        $K.whereRaw(<... $REQ.$QUERY.$VAR ...>, ...)
+    - pattern: |
+        $K.whereRaw(<... $REQ.$QUERY ...>, ...)
+    - pattern: |
+        $SQL = <... $REQ.$QUERY.$VAR ...>;
+        ...
+        $K.whereRaw(<... $SQL ...>, ...)
+    - pattern: |
+        $SQL = <... $REQ.$QUERY ...>;
+        ...
+        $K.whereRaw(<... $SQL ...>, ...)
+    - pattern: |
+        $INP = <... $REQ.$QUERY.$VAR ...>;
+        ...
+        $SQL = <... $INP ...>;
+        ...
+        $K.whereRaw(<... $SQL ...>, ...)
+    - pattern: |
+        $INP = <... $REQ.$QUERY ...>;
+        ...
+        $SQL = <... $INP ...>;
+        ...
+        $K.whereRaw(<... $SQL ...>, ...)
+  message: |
+    Untrusted input concatinated with raw SQL query using knex raw()  or whereRaw() functions can result in SQL Injection.
+  languages:
+  - "javascript"
+  severity: "ERROR"
+  metadata:
+    owasp: "A1:2017-Injection"
+    cwe: "CWE-89: Improper Neutralization of Special Elements used in an SQL Command
+      (SQL Injection)"

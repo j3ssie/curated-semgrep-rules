@@ -1,0 +1,41 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "java_perm_rule-DangerousPermissions"
+  pattern-either:
+  - pattern: |
+      $RUNVAR = new RuntimePermission("createClassLoader");
+      ...
+      (PermissionCollection $PC).add($RUNVAR);
+  - pattern: |
+      $REFVAR = new ReflectPermission("suppressAccessChecks");
+      ...
+      (PermissionCollection $PC).add($REFVAR);
+  - pattern: "(PermissionCollection $PC).add(new ReflectPermission(\"suppressAccessChecks\"))"
+  - pattern: "(PermissionCollection $PC).add(new RuntimePermission(\"createClassLoader\"))"
+  languages:
+  - "java"
+  message: |
+    The application was found to permit the `RuntimePermission` of `createClassLoader`,
+    `ReflectPermission` of `suppressAccessChecks`, or both.
+
+    By granting the `RuntimePermission` of `createClassLoader`, a compromised application
+    could instantiate their own class loaders and load arbitrary classes.
+
+    By granting the `ReflectPermission` of `suppressAccessChecks` an application will no longer
+    check Java language access checks on fields and methods of a class. This will effectively
+    grant access to protected and private members.
+
+    For more information on `RuntimePermission` see:
+    https://docs.oracle.com/javase/8/docs/api/java/lang/RuntimePermission.html
+
+    For more information on `ReflectPermission` see:
+    https://docs.oracle.com/javase/8/docs/api/java/lang/reflect/ReflectPermission.html
+  metadata:
+    shortDescription: "Improper privilege management"
+    category: "security"
+    cwe: "CWE-269"
+    confidence: "HIGH"
+  severity: "WARNING"

@@ -1,0 +1,108 @@
+# yamllint disable
+# License: Apache 2.0 (c) gosec
+# source (original): https://github.com/securego/gosec/blob/master/rules/blocklist.go
+# yamllint enable
+---
+rules:
+- id: "go_blocklist_rule-blocklist-md5"
+  languages:
+  - "go"
+  patterns:
+  - pattern: |
+      import "crypto/md5"
+  message: |
+    The MD5 message-digest algorithm has been cryptographically broken and is unsuitable for
+    further use. The MD5 hash algorithm has been found to be vulnerable to producing collisions.
+    This means that two different values, when hashed, can lead to the same hash value. It is
+    recommended that the SHA-3 or BLAKE2 family of algorithms be used for non-password based
+    cryptographic hashes instead. For password based cryptographic hashes,  consider using the
+    bcrypt or Argon2id family of cryptographic hashes.
+
+    Hashing values using [BLAKE2](https://pkg.go.dev/golang.org/x/crypto/blake2b):
+    ```
+    fileContents := []byte("some file contents to create hash for")
+    blake2bHasher, err := blake2b.New512(nil)
+    if err != nil {
+      log.Fatal(err)
+    }
+    hashedValue := blake2bHasher.Sum(fileContents)
+    fmt.Printf("%s\n", hex.EncodeToString(hashedValue))
+    ```
+
+    Hashing and securely comparing passwords using
+    [Argon2id](https://pkg.go.dev/golang.org/x/crypto/argon2#hdr-Argon2id):
+    ```
+    type argonParameters struct {
+      variant     string
+      version     int
+      memory      uint32
+      iterations  uint32
+      parallelism uint8
+      saltLength  uint32
+      keyLength   uint32
+    }
+
+    func (a argonParameters) StringFormat(salt, derivedKey []byte) string {
+      encodedSalt := base64.RawStdEncoding.EncodeToString(salt)
+      encodedKey := base64.RawStdEncoding.EncodeToString(derivedKey)
+
+      return fmt.Sprintf("$argon2id$v=%d$m=%d,t=%d,p=%d$%s$%s",
+        argon2.Version,
+        a.memory,
+        a.iterations,
+        a.parallelism,
+        encodedSalt,
+        encodedKey,
+      )
+    }
+
+    func main() {
+      // Initialize Argon2id parameters
+      p := argonParameters{
+        memory:      64 * 1024,
+        iterations:  3,
+        parallelism: 2,
+        saltLength:  16,
+        keyLength:   32,
+      }
+
+      // Generate random salt (to be stored alongside derived hash key)
+      salt := make([]byte, p.saltLength)
+      if _, err := io.ReadFull(rand.Reader, salt); err != nil {
+        log.Fatal(err)
+      }
+
+      usersPassword := []byte("User's Very S3cur3P4ss@rd@#$%")
+
+      var derivedKey []byte
+      // Create key hash derived from user's password
+      {
+        derivedKey = argon2.IDKey(usersPassword, salt, p.iterations, p.memory, p.parallelism,
+    p.keyLength)
+        // store p.StringFormat(...) result in a data store...
+        fmt.Printf("%s\n", p.StringFormat(salt, derivedKey))
+      }
+
+      // Verify a user's password against key
+      {
+        keyToCompare := argon2.IDKey(usersPassword, salt, p.iterations, p.memory, p.parallelism,
+    p.keyLength)
+
+        // Use subtle.ConstantTimeCompare(..., ...) to ensure no side channel leaks used in timing
+    attacks
+        if subtle.ConstantTimeCompare(derivedKey, keyToCompare) == 1 {
+          fmt.Printf("Passwords match\n")
+        } else {
+          fmt.Printf("Passwords do not match\n")
+        }
+      }
+    }
+    ```
+
+    For more information on password storage see OWASP's guide:
+    https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
+  metadata:
+    shortDescription: "Use of a broken or risky cryptographic algorithm"
+    cwe: "CWE-327"
+    owasp: "A9:2017-Using Components with Known Vulnerabilities"
+  severity: "WARNING"

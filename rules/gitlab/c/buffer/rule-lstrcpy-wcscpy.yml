@@ -1,0 +1,28 @@
+# yamllint disable
+# The ruleset is generated from flawfinder official rule repository hosted on github.
+# License: GPL 2.0 (c) 1989, 1991 Free Software Foundation, Inc.
+# source: https://github.com/david-a-wheeler/flawfinder/blob/e0d8827c3b714a883ce8036edc832721f4619524/flawfinder.py
+# yamllint enable
+---
+rules:
+- id: "c_buffer_rule-lstrcpy-wcscpy"
+  languages:
+  - "c"
+  message: |
+    The `lstrcpy` family of functions do not provide the ability to limit or check buffer
+    sizes before copying to a destination buffer. This can lead to buffer overflows. Consider
+    using more secure alternatives such as `strncpy_s`.
+
+    If developing for C Runtime Library (CRT), more secure versions of these functions should be
+    used, see:
+    https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/strncpy-s-strncpy-s-l-wcsncpy-s-wcsncpy-s-l-mbsncpy-s-mbsncpy-s-l?view=msvc-170
+  metadata:
+    shortDescription: "Insecure functions unable to limit / check buffer sizes"
+    cwe: "CWE-120"
+    owasp: "A1:2017-Injection"
+  pattern-either:
+  - pattern: "lstrcpy(...)"
+  - pattern: "wcscpy(...)"
+  - pattern: "_tcscpy(...)"
+  - pattern: "_mbscpy(...)"
+  severity: "ERROR"

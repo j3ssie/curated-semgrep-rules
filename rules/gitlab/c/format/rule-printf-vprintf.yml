@@ -1,0 +1,47 @@
+# yamllint disable
+# The ruleset is generated from flawfinder official rule repository hosted on github.
+# License: GPL 2.0 (c) 1989, 1991 Free Software Foundation, Inc.
+# source: https://github.com/david-a-wheeler/flawfinder/blob/e0d8827c3b714a883ce8036edc832721f4619524/flawfinder.py
+# yamllint enable
+---
+rules:
+- id: "c_format_rule-printf-vprintf"
+  languages:
+  - "c"
+  message: |
+    Format string vulnerabilities allow an attacker to read or in some cases, potentially write
+    data to
+    and from locations in the processes' memory. To prevent against format string attacks, do not
+    allow
+    users or un-validated input to provide the format specification.
+    Consider using a constant for the format specification, or only allow specific
+    characters to be provided to the format argument for the `printf` family of functions.
+
+    For more information please see: https://linux.die.net/man/3/fprintf
+
+    For more information on format string attacks please see OWASP's attack guide:
+    https://owasp.org/www-community/attacks/Format_string_attack
+  metadata:
+    shortDescription: "Potential format string vulnerability"
+    cwe: "CWE-134"
+    owasp: "A1:2017-Injection"
+  pattern-either:
+  - patterns:
+    - pattern: "printf(...)"
+    - pattern-not: "printf(\"...\",...)"
+  - patterns:
+    - pattern: "vprintf($FMT, ...)"
+    - pattern-not: "vprintf(\"...\", ...)"
+  - patterns:
+    - pattern: "vwprintf($FMT, ...)"
+    - pattern-not: "vwprintf(\"...\", ...)"
+  - patterns:
+    - pattern: "vfwprintf($FILE, $FMT, ...)"
+    - pattern-not: "vfwprintf($FILE, \"...\", ...)"
+  - patterns:
+    - pattern: "_vtprintf($FILE, $FMT, ...)"
+    - pattern-not: "_vtprintf($FILE, \"...\", ...)"
+  - patterns:
+    - pattern: "wprintf($FMT, ...)"
+    - pattern-not: "wprintf(\"...\", ...)"
+  severity: "ERROR"

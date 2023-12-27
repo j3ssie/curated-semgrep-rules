@@ -1,0 +1,74 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "java_inject_rule-CLRFInjectionLogs"
+  languages:
+  - "java"
+  patterns:
+  - pattern-either:
+    - pattern: |
+        $TAINTED = (HttpServletRequest $REQ).getParameter(...);
+        ...
+        $LOGGER.$METHOD(...,$TAINTED,...);
+    - pattern: |
+        $TAINTED = (HttpServletRequest $REQ).getParameter(...);
+        ...
+        $VAR = String.Format(..., $TAINTED,...);
+        ...
+        $LOGGER.$METHOD(...,$VAR,...);
+    - pattern: |
+        $TAINTED = (HttpServletRequest $REQ).getParameter(...);
+        ...
+        $LOGGER.$METHOD(...,String.Format(..., $TAINTED,...),...);
+    - pattern: |
+        $TAINTED = (HttpServletRequest $REQ).getParameter(...);
+        ...
+        $VAR = ... + $TAINTED + ...;
+        ...
+        $LOGGER.$METHOD(...,$VAR,...);
+    - pattern: |
+        $TAINTED = (HttpServletRequest $REQ).getParameter(...);
+        ...
+        $LOGGER.$METHOD(...,... + $TAINTED + ...,...);
+  - metavariable-regex:
+      metavariable: "$METHOD"
+      regex: "(log|logp|logrb|entering|exiting|fine|finer|finest|info|debug|trace|warn|warning|config|error|severe)"
+  - metavariable-pattern:
+      metavariable: "$LOGGER"
+      pattern-either:
+      - pattern: "(Logger $LOG)"
+      - pattern: "org.pmw.tinylog.Logger"
+      - pattern: "org.apache.log4j.Logger"
+      - pattern: "org.apache.logging.log4j.Logger"
+      - pattern: "org.slf4j.Logger"
+      - pattern: "org.apache.commons.logging.Log"
+      - pattern: "java.util.logging.Logger"
+  message: |
+    The application was found to take data from user input and output it into a logger method.
+    When data from
+    an untrusted source is sent to a logger without validation, an attacker could forge log
+    entries
+    or include malicious content. If the log file is processed automatically, the attacker can
+    render the file unusable by corrupting the format of the file or injecting unexpected
+    characters. An attacker may also inject code or other commands into the log file and take
+    advantage of a vulnerability in the log processing utility (e.g. command injection or XSS).
+
+    To mitigate this issue, encode values that come from user input with a package such as
+    [Apache Commons Text](https://commons.apache.org/proper/commons-text/) to escape the input:
+    ```
+    public String escapeValue(String value) {
+      return StringEscapeUtils.escapeJava(value);
+    }
+    ```
+
+    For more information on log injection see OWASP:
+    https://owasp.org/www-community/attacks/Log_Injection
+  severity: "ERROR"
+  metadata:
+    shortDescription: "Improper neutralization of CRLF sequences ('CRLF Injection')"
+    category: "security"
+    cwe: "CWE-93"
+    technology:
+    - "java"

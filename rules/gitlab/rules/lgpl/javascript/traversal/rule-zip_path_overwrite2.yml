@@ -1,0 +1,44 @@
+# yamllint disable
+# License: GNU Lesser General Public License v3.0
+# source (original): https://github.com/ajinabraham/njsscan/blob/master/njsscan/rules/semantic_grep/traversal/archive_path_overwrite.yaml
+# hash: e7a0a61
+# yamllint enable
+---
+rules:
+- id: "rules_lgpl_javascript_traversal_rule-zip-path-overwrite2"
+  patterns:
+  - pattern-either:
+    - pattern-inside: |
+        $X = require('unzip')
+        ...
+    - pattern-inside: |
+        $X = require('unzipper')
+        ...
+  - pattern-inside: |
+      $UNZIP.Parse(...).on('entry', function $FUNC($ENTRY) {
+          ...
+      }, ...)
+  - pattern-not: |
+      if ($FILENAME.indexOf('..'))
+  - pattern-not: |
+      $FS.createWriteStream($PATH.join(..., $PATH.basename($FILENAME, ...)))
+  - pattern-not: |
+      $FS.writeFile($PATH.join(..., $PATH.basename($FILENAME, ...)))
+  - pattern-not: |
+      $FS.writeFileSync($PATH.join(..., $PATH.basename($FILENAME, ...)))
+  - pattern-either:
+    - pattern: |
+        $FS.createWriteStream($FIL, ...)
+    - pattern: |
+        $FS.writeFile($FIL, ...)
+    - pattern: |
+        $FS.writeFileSync($FIL, ...)
+  message: |
+    Insecure ZIP archive extraction can result in arbitrary path over write and can result in code injection.
+  languages:
+  - "javascript"
+  severity: "ERROR"
+  metadata:
+    owasp: "A5:2017-Broken Access Control"
+    cwe: "CWE-22: Improper Limitation of a Pathname to a Restricted Directory (Path
+      Traversal)"

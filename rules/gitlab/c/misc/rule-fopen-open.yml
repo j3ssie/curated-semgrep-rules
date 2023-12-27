@@ -1,0 +1,31 @@
+# yamllint disable
+# The ruleset is generated from flawfinder official rule repository hosted on github.
+# License: GPL 2.0 (c) 1989, 1991 Free Software Foundation, Inc.
+# source: https://github.com/david-a-wheeler/flawfinder/blob/e0d8827c3b714a883ce8036edc832721f4619524/flawfinder.py
+# yamllint enable
+---
+rules:
+- id: "c_misc_rule-fopen-open"
+  languages:
+  - "c"
+  message: |
+    Usage of the `open` family of functions may hint at a potential Time Of Check Time Of Use
+    (TOCTOU)
+    vulnerability. An attacker may be able to modify the file being specified by the `open`
+    function prior to the `open` function being called.
+
+    Prior to calling `open`, use `lstat` to open the file and confirm the attributes
+    are correct. Then use `open` to get a file descriptor to this file. Call `fstat` on the
+    `open` file descriptor to confirm that `st_dev` and `st_ino` are equal between the two.
+    If they are, it is safe to read and operate on the file's contents.
+
+    For more information please see:
+    https://wiki.sei.cmu.edu/confluence/display/c/FIO45-C.+Avoid+TOCTOU+race+conditions+while+accessing+files
+  metadata:
+    shortDescription: "Potential time of check time of use vulnerability (open/fopen)"
+    cwe: "CWE-362"
+    owasp: "A5:2017-Broken Access Control"
+  pattern-either:
+  - pattern: "fopen(...)"
+  - pattern: "open(...)"
+  severity: "INFO"

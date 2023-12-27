@@ -1,0 +1,23 @@
+rules:
+  - id: missing-healthcheck
+    languages:
+      - dockerfile
+    message: >-
+      Missing HEALTHCHECK instruction.
+    severity: INFO
+    metadata:
+      category: best-practice
+      technology:
+        - dockerfile
+    patterns:
+      - pattern: |
+         FROM gcr.io/distroless/static-debian10
+         ...
+      - pattern-not-inside: |
+         FROM gcr.io/distroless/static-debian10
+         ...
+         HEALTHCHECK $F 
+         ...
+    paths:
+      exclude:
+        - "./vendor/*"

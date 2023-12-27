@@ -1,0 +1,83 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "java_xml_rule-XsltTransform"
+  languages:
+  - "java"
+  mode: "taint"
+  pattern-sources:
+  - patterns:
+    - pattern-either:
+      - patterns:
+        - pattern-inside: |
+            $FUNC(...,String $VAR, ...) {
+              ...
+            }
+        - pattern-either:
+          - pattern: "new FileInputStream(<... $VAR ...>);"
+          - pattern: "getClass().getResourceAsStream(<... $VAR ...>)"
+      - patterns:
+        - pattern-inside: |
+            class $CLZ {
+              String $X = "...";
+              ...
+            }
+        - pattern-inside: |
+            $FUNC(...,String $Y, ...) {
+              ...
+            }
+        - pattern-either:
+          - pattern: "new FileInputStream($X + $Y);"
+          - pattern: "getClass().getResourceAsStream($X + $Y)"
+  pattern-sinks:
+  - patterns:
+    - pattern-either:
+      - pattern-inside: |-
+          (javax.xml.transform.TransformerFactory $T).newTransformer($SRC, ...)
+      - pattern-inside: |-
+          (javax.xml.transform.Transformer $T).transform($SRC, ...)
+    - pattern: "$SRC"
+  message: |
+    The application performs XSLT translation with potentially malicious input. An adversary who
+    is able to influence the
+    loaded
+    XSL document could call XSL functions or exploit External XML Entity (XXE) attacks that allow
+    file
+    retrieval or force the parser to connect to arbitrary servers to exfiltrate files. It is
+    strongly
+    recommended that an alternative approach is used to work with XML data.
+
+    For increased security, never process user-supplied XSL style sheets. If XSLT processing is
+    absolutely
+    necessary, ensure that `FEATURE_SECURE_PROCESSING` is enabled prior to processing the XSLT
+    file:
+    ```
+    // Create a new TransformerFactory instance
+    TransformerFactory transformerFactory = TransformerFactory.newInstance();
+    // Enable the FEATURE_SECURE_PROCESSING feature
+    transformerFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+    // Read in the XML Source
+    Source xmlSource = new StreamSource(new FileInputStream("hardcoded.xml"));
+    // Read in the XSL template file
+    Source xslSource = new StreamSource(new FileInputStream("hardcoded.xsl"));
+    /// Create the transformer object to do the transformation
+    Transformer transformer = transformerFactory.newTransformer(xslSource);
+    // Create a Result object for output
+    Result result = new StreamResult(System.out);
+    // Execute the transformation process
+    transformer.transform(xmlSource, result);
+    ```
+
+    For more information on XML security see OWASP's guide:
+    https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html#java
+
+    For more information on the secure processing feature see:
+    - https://xml.apache.org/xalan-j/features.html#secureprocessing
+  metadata:
+    shortDescription: "Improper neutralization of special elements in output used
+      by a downstream component ('Injection')"
+    category: "security"
+    cwe: "CWE-74"
+  severity: "WARNING"

@@ -1,0 +1,45 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_inject_rule-CustomInjectionSQLString"
+  languages:
+  - "scala"
+  message: |
+    The method identified is susceptible to injection. The input should be validated and properly
+    escaped.
+  metadata:
+    category: "security"
+    cwe: "CWE-89"
+    shortDescription: "Improper Neutralization of Special Elements used in an SQL
+      Command ('SQL Injection')"
+    technology:
+    - "scala"
+  patterns:
+  - pattern-inside: |
+      def $FOO(..., $SQLIN: String, ...): $TYPE = {
+        ...
+      }
+  - pattern-either:
+    - pattern: |
+        "$SQL_STR" + $SQLIN
+    - pattern: "String.format(\"$SQL_STR\", ... + $SQLIN + ...)"
+    - pattern: |
+        "$SQL_STR".concat(...)
+    - pattern: "(StringBuilder $BUILDER). ... .append(\"$SQL_STR\")"
+    - patterns:
+      - pattern-inside: |
+          StringBuilder $BUILDER = new StringBuilder(... + "$SQL_STR" + ...);
+          ...
+      - pattern: "$BUILDER.append(...)"
+      - pattern-not: "$BUILDER.append(\"...\")"
+    - patterns:
+      - pattern-inside: |
+          $QUERY = "$SQL_STR";
+          ...
+      - pattern: "$QUERY += ..."
+  - metavariable-regex:
+      metavariable: "$SQL_STR"
+      regex: "(?i)(select|insert|create|update|alter|delete|drop)\\b"
+  severity: "WARNING"

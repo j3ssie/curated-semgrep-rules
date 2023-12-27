@@ -1,0 +1,23 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "java_crypto_rule-HazelcastSymmetricEncryption"
+  languages:
+  - "java"
+  patterns:
+  - pattern: "new com.hazelcast.config.SymmetricEncryptionConfig()"
+  message: |
+    The network communications for Hazelcast is configured to use a deprecated symmetric cipher.
+    Consider using TLS/SSL when establishing communications across the Hazelcast cluster.
+
+    For more information on configuring TLS/SSL for Hazelcast see:
+    https://docs.hazelcast.com/imdg/4.2/security/tls-ssl
+  severity: "WARNING"
+  metadata:
+    shortDescription: "Inadequate encryption strength"
+    category: "security"
+    cwe: "CWE-326"
+    technology:
+    - "java"

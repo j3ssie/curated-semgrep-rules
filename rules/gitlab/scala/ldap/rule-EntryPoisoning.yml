@@ -1,0 +1,20 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_ldap_rule-EntryPoisoning"
+  languages:
+  - "scala"
+  message: |
+    Without proper access control, executing an LDAP statement that contains a
+    user-controlled value can allow an attacker to abuse poorly configured LDAP
+    context
+  metadata:
+    category: "security"
+    cwe: "CWE-20"
+    shortDescription: "Improper Input Validation"
+  patterns:
+  - pattern: "new javax.naming.directory.SearchControls($SCOPE, $CLIMIT, $TLIMIT,
+      $ATTR, true, $DEREF)"
+  severity: "ERROR"

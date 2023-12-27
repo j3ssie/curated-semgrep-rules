@@ -1,0 +1,71 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "java_strings_rule-FormatStringManipulation"
+  languages:
+  - "java"
+  patterns:
+  - pattern-either:
+    - patterns:
+      - pattern-inside: |
+          String $INPUT = (HttpServletRequest $REQ).getParameter(...);
+          ...
+      - pattern-inside: |
+          String $FORMAT_STR = ... + $INPUT;
+          ...
+    - patterns:
+      - pattern-inside: |
+          String $INPUT = (HttpServletRequest $REQ).getParameter(...);
+          ...
+      - pattern-inside: |
+          String $FORMAT_STR = ... + $INPUT + ...;
+          ...
+    - pattern-inside: |
+        String $FORMAT_STR = ... + (HttpServletRequest $REQ).getParameter(...) + ...;
+        ...
+    - pattern-inside: |
+        String $FORMAT_STR = ... + (HttpServletRequest $REQ).getParameter(...);
+        ...
+  - pattern-either:
+    - pattern: "String.format($FORMAT_STR, ...);"
+    - pattern: "String.format(java.util.Locale.$LOCALE, $FORMAT_STR, ...);"
+    - pattern: "(java.util.Formatter $F).format($FORMAT_STR, ...);"
+    - pattern: "(java.util.Formatter $F).format(java.util.Locale.$LOCALE, $FORMAT_STR,
+        ...);"
+    - pattern: "(java.io.PrintStream $F).printf($FORMAT_STR, ...);"
+    - pattern: "(java.io.PrintStream $F).printf(java.util.Locale.$LOCALE, $FORMAT_STR,
+        ...);"
+    - pattern: "(java.io.PrintStream $F).format($FORMAT_STR, ...);"
+    - pattern: "(java.io.PrintStream $F).format(java.util.Locale.$LOCALE, $FORMAT_STR,
+        ...);"
+    - pattern: "System.out.printf($FORMAT_STR, ...);"
+    - pattern: "System.out.printf(java.util.Locale.$LOCALE, $FORMAT_STR, ...);"
+    - pattern: "System.out.format($FORMAT_STR, ...);"
+    - pattern: "System.out.format(java.util.Locale.$LOCALE, $FORMAT_STR, ...);"
+  message: |
+    The application allows user input to control format string parameters. By passing invalid
+    format
+    string specifiers an adversary could cause the application to throw exceptions or possibly
+    leak
+    internal information depending on application logic.
+
+    Never allow user-supplied input to be used to create a format string. Replace all format
+    string
+    arguments with hardcoded format strings containing the necessary specifiers.
+
+    Example of using `String.format` safely:
+    ```
+    // Get untrusted user input
+    String userInput = request.getParameter("someInput");
+    // Ensure that user input is not included in the first argument to String.format
+    String.format("Hardcoded string expecting a string: %s", userInput);
+    // ...
+    ```
+  metadata:
+    shortDescription: "Use of externally-controlled format string"
+    cwe: "CWE-134"
+    category: "security"
+    confidence: "HIGH"
+  severity: "ERROR"

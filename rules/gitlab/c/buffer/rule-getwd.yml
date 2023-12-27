@@ -1,0 +1,22 @@
+# yamllint disable
+# The ruleset is generated from flawfinder official rule repository hosted on github.
+# License: GPL 2.0 (c) 1989, 1991 Free Software Foundation, Inc.
+# source: https://github.com/david-a-wheeler/flawfinder/blob/e0d8827c3b714a883ce8036edc832721f4619524/flawfinder.py
+# yamllint enable
+---
+rules:
+- id: "c_buffer_rule-getwd"
+  languages:
+  - "c"
+  message: |
+    `getwd` does not contain a parameter to limit how many characters can be copied into the
+    destination buffer. For portability and security reasons `getwd` has been deprecated in
+    favor of `getcwd`.
+
+    For more information please see: https://linux.die.net/man/3/getcwd
+  metadata:
+    shortDescription: "Insufficient protection against buffer overflow (getwd)"
+    cwe: "CWE-120"
+    owasp: "A1:2017-Injection"
+  pattern: "getwd(...)"
+  severity: "WARNING"

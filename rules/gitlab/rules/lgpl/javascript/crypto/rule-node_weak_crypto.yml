@@ -1,0 +1,20 @@
+# yamllint disable
+# License: GNU Lesser General Public License v3.0
+# source (original): https://github.com/ajinabraham/njsscan/blob/master/njsscan/rules/semantic_grep/crypto/crypto_node.yaml
+# hash: e7a0a61
+# yamllint enable
+---
+rules:
+- id: "rules_lgpl_javascript_crypto_rule-node-weak-crypto"
+  patterns:
+  - pattern-either:
+    - pattern: |
+        $X.createCipher('des', ...)
+  message: |
+    A weak or broken cryptographic algorithm was identified. Using these functions will introduce vulnerabilities or downgrade the security of your application.
+  languages:
+  - "javascript"
+  severity: "ERROR"
+  metadata:
+    owasp: "A9:2017-Using Components with Known Vulnerabilities"
+    cwe: "CWE-327: Use of a Broken or Risky Cryptographic Algorithm"

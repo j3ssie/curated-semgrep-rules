@@ -1,0 +1,30 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_cookie_rule-TrustBoundaryViolation"
+  languages:
+  - "scala"
+  message: |
+    A trust boundary can be thought of as line drawn through a program. On one side
+    of the line, data is untrusted. On the other side of the line, data is assumed
+    to be trustworthy. The purpose of validation logic is to allow data to safely
+    cross the trust boundary - to move from untrusted to trusted. A trust boundary
+    violation occurs when a program blurs the line between what is trusted and what
+    is untrusted. By combining trusted and untrusted data in the same data
+    structure, it becomes easier for programmers to mistakenly trust unvalidated
+    data.
+  metadata:
+    category: "security"
+    cwe: "CWE-501"
+    shortDescription: "Trust Boundary Violation"
+  patterns:
+  - pattern-either:
+    - patterns:
+      - pattern: "($H: HttpServletRequest). ... .setAttribute($ARG1, $ARG2)"
+      - pattern-not: "($H: HttpServletRequest). ... .setAttribute(\"...\", \"...\")"
+    - patterns:
+      - pattern: "($H: HttpServletRequest). ... .putValue($ARG1, $ARG2)"
+      - pattern-not: "($H: HttpServletRequest). ... .putValue(\"...\", \"...\")"
+  severity: "WARNING"

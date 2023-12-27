@@ -1,0 +1,40 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_file_rule-FilenameUtils"
+  languages:
+  - "scala"
+  message: |
+    A file is opened to read its content. The filename comes from an input
+    parameter. If an unfiltered parameter is passed to this file API, files from an
+    arbitrary filesystem location could be read.
+  metadata:
+    category: "security"
+    cwe: "CWE-22"
+    shortDescription: "Improper Limitation of a Pathname to a Restricted Directory
+      ('Path Traversal')"
+    technology:
+    - "scala"
+  pattern-either:
+  - patterns:
+    - pattern-inside: |
+        import org.apache.commons.io.FilenameUtils._
+        ...
+    - pattern-either:
+      - pattern: "normalize(...)"
+      - pattern: "getExtension(...)"
+      - pattern: "isExtensions(...)"
+      - pattern: "isExtension(...)"
+      - pattern: "getName(...)"
+      - pattern: "getBaseName(...)"
+  - patterns:
+    - pattern-either:
+      - pattern: "org.apache.commons.io.FilenameUtils.normalize(...)"
+      - pattern: "org.apache.commons.io.FilenameUtils.getExtension(...)"
+      - pattern: "org.apache.commons.io.FilenameUtils.isExtensions(...)"
+      - pattern: "org.apache.commons.io.FilenameUtils.isExtension(...)"
+      - pattern: "org.apache.commons.io.FilenameUtils.getName(...)"
+      - pattern: "org.apache.commons.io.FilenameUtils.getBaseName(...)"
+  severity: "ERROR"

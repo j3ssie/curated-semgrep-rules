@@ -1,0 +1,25 @@
+# yamllint disable
+# The ruleset is generated from flawfinder official rule repository hosted on github.
+# License: GPL 2.0 (c) 1989, 1991 Free Software Foundation, Inc.
+# source: https://github.com/david-a-wheeler/flawfinder/blob/e0d8827c3b714a883ce8036edc832721f4619524/flawfinder.py
+# yamllint enable
+---
+rules:
+- id: "c_tmpfile_rule-GetTempFileName"
+  languages:
+  - "c"
+  message: |
+    The `GetTempFileName` function works by generating a randomly named file, creating the file
+    (if it does not exist) and then closing it. An application wishing to use this temporary file
+    will need to reopen this file to begin working with it. This leads to a potential
+    Time Of Check Time Of Use (TOCTOU) vulnerability, as an attacker could replace or modify
+    the contents of the file prior to it being used by the application.
+
+    Consider generating a random filename and opening the file directly in a single `CreateFile`
+    or `OpenFile` call.
+  metadata:
+    shortDescription: "Potential time of check time of use vulnerability (GetTempFileName)"
+    cwe: "CWE-377"
+    owasp: "A5:2017-Broken Access Control"
+  pattern: "GetTempFileName(...)"
+  severity: "WARNING"

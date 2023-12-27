@@ -1,0 +1,23 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_xml_rule-XmlDecoder"
+  languages:
+  - "scala"
+  message: |
+    Avoid using XMLDecoder to parse content from an untrusted source.
+  metadata:
+    category: "security"
+    cwe: "CWE-502"
+    shortDescription: "Deserialization of Untrusted Data"
+  patterns:
+  - pattern-inside: |
+      $D = new java.beans.XMLDecoder($IN);
+      ...
+  - pattern-not-inside: |
+      $DX = new java.beans.XMLDecoder("...");
+      ...
+  - pattern: "$D.readObject"
+  severity: "WARNING"

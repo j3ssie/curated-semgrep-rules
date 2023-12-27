@@ -1,0 +1,26 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_random_rule-PseudoRandom"
+  languages:
+  - "scala"
+  message: |
+    The use of a predictable random value can lead to vulnerabilities when used in certain security
+    critical contexts. A quick fix could be to replace the use of scala.util.Random with something
+    stronger, such as java.security.SecureRandom
+  metadata:
+    category: "security"
+    cwe: "CWE-330"
+    shortDescription: "Use of Insufficiently Random Values"
+    technology:
+    - "scala"
+  pattern-either:
+  - patterns:
+    - pattern: "$LANG.util.Random.$METHOD"
+    - metavariable-regex:
+        metavariable: "$METHOD"
+        regex: "^(next)"
+  - pattern: "Math.random"
+  severity: "WARNING"

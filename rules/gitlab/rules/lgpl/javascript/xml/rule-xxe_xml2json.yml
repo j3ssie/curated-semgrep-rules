@@ -1,0 +1,40 @@
+# yamllint disable
+# License: GNU Lesser General Public License v3.0
+# source (original): https://github.com/ajinabraham/njsscan/blob/master/njsscan/rules/semantic_grep/xml/xxe_xml2json.yaml
+# hash: e7a0a61
+# yamllint enable
+---
+rules:
+- id: "rules_lgpl_javascript_xml_rule-xxe-xml2json"
+  patterns:
+  - pattern-inside: |
+      require('xml2json')
+      ...
+  - pattern-either:
+    - pattern-inside: |-
+        function $FUNC($REQ, $RES, ...) {...}
+    - pattern-inside: |-
+        $X = function $FUNC($REQ, $RES, ...) {...}
+    - pattern-inside: |-
+        var $X = function $FUNC($REQ, $RES, ...) {...};
+    - pattern-inside: |-
+        $APP.$METHOD(..., function $FUNC($REQ, $RES, ...) {...})
+  - pattern-either:
+    - pattern: "$EXPAT.toJson(<... $REQ.$QUERY.$FOO ...>,...)"
+    - pattern: "$EXPAT.toJson(<... $REQ.$BODY ...>,...)"
+    - pattern: |
+        $INPUT = <... $REQ.$QUERY.$FOO ...>;
+        ...
+        $EXPAT.toJson(<... $INPUT ...>,...)
+    - pattern: |
+        $INPUT = <... $REQ.$BODY ...>;
+        ...
+        $EXPAT.toJson(<... $INPUT ...>,...)
+  message: |
+    Make sure that unverified user data can not reach the XML Parser, as it can result in XML External or Internal Entity (XXE) Processing vulnerabilities.
+  metadata:
+    owasp: "A4:2017-XML External Entities (XXE)"
+    cwe: "CWE-611: Improper Restriction of XML External Entity Reference"
+  severity: "ERROR"
+  languages:
+  - "javascript"

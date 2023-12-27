@@ -1,0 +1,51 @@
+# yamllint disable
+# The ruleset is generated from flawfinder official rule repository hosted on github.
+# License: GPL 2.0 (c) 1989, 1991 Free Software Foundation, Inc.
+# source: https://github.com/david-a-wheeler/flawfinder/blob/e0d8827c3b714a883ce8036edc832721f4619524/flawfinder.py
+# yamllint enable
+---
+rules:
+- id: "c_random_rule-drand48-erand48"
+  languages:
+  - "c"
+  message: |
+    The detected function is not sufficient at generating security-related random numbers,
+    such as those used in key and nonce creation. Consider using the libsodium library's
+    `randombytes_random` function instead. More information on libsodium's random number
+    generators can be found here: https://libsodium.gitbook.io/doc/generating_random_data.
+
+    If FIPS validation is required, consider using OpenSSLs `RAND_bytes` family of functions after
+    enabling the `FIPS_mode_set`.
+
+    For more information on OpenSSL random numbers please see:
+    https://wiki.openssl.org/index.php/Random_Numbers
+  metadata:
+    shortDescription: "Usage of insufficient random number generators"
+    cwe: "CWE-327"
+    owasp: "A3:2017-Sensitive Data Exposure"
+  pattern-either:
+  - pattern: "drand48(...)"
+  - pattern: "erand48(...)"
+  - pattern: "jrand48(...)"
+  - pattern: "lcong48(...)"
+  - pattern: "lrand48(...)"
+  - pattern: "mrand48(...)"
+  - pattern: "nrand48(...)"
+  - pattern: "random(...)"
+  - pattern: "seed48(...)"
+  - pattern: "setstate(...)"
+  - pattern: "srand(...)"
+  - pattern: "strfry(...)"
+  - pattern: "srandom(...)"
+  - pattern: "g_rand_boolean(...)"
+  - pattern: "g_rand_int(...)"
+  - pattern: "g_rand_int_range(...)"
+  - pattern: "g_rand_double(...)"
+  - pattern: "g_rand_double_range(...)"
+  - pattern: "g_random_boolean(...)"
+  - pattern: "g_random_int(...)"
+  - pattern: "g_random_int_range(...)"
+  - pattern: "g_random_double(...)"
+  - pattern: "g_random_double_range(...)"
+  - pattern-regex: "(long|short|double|int|float|void)\\s(\\*|)(\\s|)(seed48|lcong48)(\\(.*\\))\\;"
+  severity: "WARNING"

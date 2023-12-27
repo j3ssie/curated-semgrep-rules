@@ -1,0 +1,83 @@
+# yamllint disable
+# License: Apache 2.0 (c) gosec
+# source (original): https://github.com/securego/gosec/blob/master/rules/tls_config.go
+# yamllint enable
+---
+rules:
+- id: "go_crypto_rule-badtlssettings"
+  languages:
+  - "go"
+  patterns:
+  - pattern-either:
+    - pattern: |
+        tls.Config{..., CipherSuites: []$SLICE{..., $CIPHERS, ...}, ...}
+    - pattern: |
+        tls.CipherSuite{..., ID: $CIPHERS, ...}
+  - metavariable-regex:
+      metavariable: "$CIPHERS"
+      regex: "((?!tls.TLS_AES_128_GCM_SHA256)|(?!tls.TLS_AES_256_GCM_SHA384)|(?!tls.TLS_CHACHA20_POLY1305_SHA256)|
+        (?!tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256)|(?!tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256)|
+        (?!tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384)|(?!tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384)|
+        (?!tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305)|(?!tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256)|
+        (?!tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305)|(?!tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256)|
+        (?!tls.TLS_DHE_RSA_WITH_AES_128_GCM_SHA256)|(?!tls.TLS_DHE_RSA_WITH_AES_256_GCM_SHA384))"
+  message: |
+    Usage of a cryptographically insecure cipher suite has been detected. It is recommended that
+    alternative ciphers be used instead. It is strongly recommended that all TLS connections
+    use TLS 1.3 as Go will automatically choose the most secure cipher when negotiating the
+    TLS handshake with client or servers. TLS 1.3 cipher suites are configured to require Perfect
+    Forward Secrecy (PFS).
+    PFS is an important property as it will ensure that past encrypted transmissions could not be
+    decrypted
+    if the TLS certificate was compromised.
+
+    Example using TLS 1.3 for a Go server:
+    ```
+    cert, err := tls.LoadX509KeyPair("server.crt", "server.key")
+    if err != nil {
+      log.Fatal(err)
+    }
+
+    cfg := &tls.Config{Certificates: []tls.Certificate{cert}, MinVersion: tls.VersionTLS13}
+    srv := &http.Server{
+      Addr:         ":8999",
+      TLSConfig:    cfg,
+      ReadTimeout:  time.Minute,
+      WriteTimeout: time.Minute,
+    }
+    log.Fatal(srv.ListenAndServeTLS("", ""))
+    ```
+
+    If TLS 1.0-1.2 must be used, then the following list of ciphers should be chosen as they
+    support
+    Perfect Forward Secrecy (PFS):
+
+    - TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+    - TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+    - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+    - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+    - TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305
+    - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305
+
+
+    Example `tls.Config` using the recommended cipher suites:
+    ```
+    cfg := &tls.Config{
+        MinVersion: tls.VersionTLS12,
+        CipherSuites: []uint16{
+            tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+            tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+            tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+            tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+            tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
+            tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
+        },
+    }
+    ```
+
+    For more information on cipher suites in Go see: https://go.dev/blog/tls-cipher-suites
+  metadata:
+    shortDescription: "Use of a broken or risky cryptographic algorithm"
+    cwe: "CWE-327"
+    owasp: "A9:2017-Using Components with Known Vulnerabilities"
+  severity: "WARNING"

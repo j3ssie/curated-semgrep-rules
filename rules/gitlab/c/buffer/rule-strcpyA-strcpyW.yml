@@ -1,0 +1,44 @@
+# yamllint disable
+# The ruleset is generated from flawfinder official rule repository hosted on github.
+# License: GPL 2.0 (c) 1989, 1991 Free Software Foundation, Inc.
+# source: https://github.com/david-a-wheeler/flawfinder/blob/e0d8827c3b714a883ce8036edc832721f4619524/flawfinder.py
+# yamllint enable
+---
+rules:
+- id: "c_buffer_rule-strcpyA-strcpyW"
+  languages:
+  - "c"
+  message: |
+    The `StrCpy` family of functions do not guarantee the final string to be null terminated.
+    Consider
+    using one of the following alternatives `StringCbCopy`, `StringCbCopyEx`, `StringCbCopyN`,
+    `StringCbCopyNEx`, `StringCchCopy`, `StringCchCopyEx`, `StringCchCopyN`, or `StringCchCopyNEx`.
+
+    If developing for C Runtime Library (CRT), more secure versions of these functions should be
+    used, see:
+    https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/strncpy-s-strncpy-s-l-wcsncpy-s-wcsncpy-s-l-mbsncpy-s-mbsncpy-s-l?view=msvc-170
+  metadata:
+    shortDescription: "Insecure string processing function"
+    cwe: "CWE-120"
+    owasp: "A1:2017-Injection"
+  pattern-either:
+  - pattern: "strcpyA(...)"
+  - pattern: "strcpyW(...)"
+  - pattern: "StrCpy(...)"
+  - pattern: "StrCpyA(...)"
+  - pattern: "lstrcpyA(...)"
+  - pattern: "lstrcpyW(...)"
+  - pattern: "_tccpy(...)"
+  - pattern: "_mbccpy(...)"
+  - pattern: "_ftcscpy(...)"
+  - pattern: "_mbsncpy(...)"
+  - pattern: "StrCpyN(...)"
+  - pattern: "StrCpyNA(...)"
+  - pattern: "StrCpyNW(...)"
+  - pattern: "StrNCpy(...)"
+  - pattern: "strcpynA(...)"
+  - pattern: "StrNCpyA(...)"
+  - pattern: "StrNCpyW(...)"
+  - pattern: "lstrcpynA(...)"
+  - pattern: "lstrcpynW(...)"
+  severity: "ERROR"

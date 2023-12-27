@@ -1,0 +1,42 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "python_eval_rule-eval"
+  languages:
+  - "python"
+  message: |
+    The application was found calling the `eval` function with a non-literal variable. If the
+    variable comes from user-supplied input, an adversary could compromise the entire system by
+    executing arbitrary python code.
+
+    To remediate this issue, remove all calls to `eval` and consider alternative methods for
+    executing
+    the necessary business logic. There is almost no safe method of calling `eval` with
+    user-supplied input.
+
+    If the application only needs to convert strings into objects, consider using `json.loads`.
+    In some cases `ast.literal_eval` is recommended, but this should be avoided as it can still
+    suffer from other issues such as the ability for malicious code to crash the python
+    interpreter or application.
+
+    Example using `json.loads`` to load in arbitrary data to create data structures:
+    ```
+    # User supplied data as a blob of JSON
+    user_supplied_data = """{"user": "test", "metadata": [1,2,3]}"""
+    # Load the JSON
+    user_object = json.loads(user_supplied_data)
+    # Manually add protected properties _after_ loading, never before
+    user_object["is_admin"] = False
+    # Work with the object
+    ```
+  metadata:
+    cwe: "CWE-95"
+    owasp: "A1:2017-Injection"
+    category: "security"
+    shortDescription: "Improper neutralization of directives in dynamically evaluated
+      code ('Eval Injection')"
+  patterns:
+  - pattern: "eval(...)"
+  severity: "WARNING"

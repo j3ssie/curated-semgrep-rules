@@ -1,0 +1,56 @@
+# yamllint disable
+# License: GNU Lesser General Public License v3.0
+# source (original): https://github.com/ajinabraham/njsscan/blob/master/njsscan/rules/semantic_grep/redirect/open_redirect.yaml
+# hash: e7a0a61
+# yamllint enable
+---
+rules:
+- id: "rules_lgpl_javascript_redirect_rule-express-open-redirect2"
+  patterns:
+  - pattern-inside: |
+      $APP.$METHOD(..., function $FUNC($REQ, $RES) { ... })
+  - pattern-either:
+    - pattern: |
+        $RES.header(..., "=~/location/i", <... $REQ.$VAR ...>, ...)
+    - pattern: |
+        $RES.header(..., "=~/location/i", <... $REQ.$VAR.$VARR ...>, ...)
+    - pattern: |
+        $RES.writeHead(..., "=~/location/i", <... $REQ.$VAR ...>, ...)
+    - pattern: |
+        $RES.writeHead(..., "=~/location/i", <... $REQ.$VAR.$VARR ...>, ...)
+    - pattern: |
+        $RES.writeHead(..., {"=~/location/i": <... $REQ.$VAR ...> }, ...)
+    - pattern: |
+        $RES.writeHead(..., {"=~/location/i": <... $REQ.$VAR.$VARR ...> }, ...)
+    - pattern: |
+        $INP = <... $REQ.$VAR ...>;
+        ...
+        $RES.header(..., "=~/location/i", <... $INP ...>, ...)
+    - pattern: |
+        $INP = <... $REQ.$VAR.$VARR ...>;
+        ...
+        $RES.header(..., "=~/location/i", <... $INP ...>, ...)
+    - pattern: |
+        $INP = <... $REQ.$VAR ...>;
+        ...
+        $RES.writeHead(..., "=~/location/i", <... $INP ...>, ...)
+    - pattern: |
+        $INP = <... $REQ.$VAR.$VARR ...>;
+        ...
+        $RES.writeHead(..., "=~/location/i", <... $INP ...>, ...)
+    - pattern: |
+        $INP = <... $REQ.$VAR ...>;
+        ...
+        $RES.writeHead(..., {"=~/location/i": <... $INP ...> }, ...)
+    - pattern: |
+        $INP = <... $REQ.$VAR.$VARR ...>;
+        ...
+        $RES.writeHead(..., {"=~/location/i": <... $INP ...> }, ...)
+  message: |
+    Untrusted user input in response header('Location') can result in Open Redirect vulnerability.
+  languages:
+  - "javascript"
+  severity: "ERROR"
+  metadata:
+    owasp: "A1:2017-Injection"
+    cwe: "CWE-601: URL Redirection to Untrusted Site (Open Redirect)"

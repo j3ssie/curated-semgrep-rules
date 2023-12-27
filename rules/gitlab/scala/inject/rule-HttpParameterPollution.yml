@@ -1,0 +1,33 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_inject_rule-HttpParameterPollution"
+  languages:
+  - "scala"
+  message: |
+    Concatenating unvalidated user input into a URL can allow an attacker to override the value of
+    a request parameter. Attacker may be able to override existing parameter values, inject a new
+    parameter or exploit variables out of a direct reach. HTTP Parameter Pollution (HPP) attacks
+    consist of injecting encoded query string delimiters into other existing parameters. If a web
+    application does not properly sanitize the user input, a malicious user may compromise the
+    logic of the application to perform either client-side or server-side attacks.
+  metadata:
+    category: "security"
+    cwe: "CWE-88"
+    shortDescription: "Improper Neutralization of Argument Delimiters in a Command
+      ('Argument Injection')"
+    technology:
+    - "scala"
+  mode: "taint"
+  pattern-sanitizers:
+  - pattern: "java.net.URLEncoder.encode(...)"
+  - pattern: "com.google.common.net.UrlEscapers.urlPathSegmentEscaper().escape(...)"
+  pattern-sinks:
+  - pattern: "new org.apache.http.client.methods.HttpGet(...)"
+  - pattern: "new org.apache.commons.httpclient.methods.GetMethod(...)"
+  - pattern: "($GM: org.apache.commons.httpclient.methods.GetMethod).setQueryString(...)"
+  pattern-sources:
+  - pattern: "($REQ: HttpServletRequest ).getParameter(...)"
+  severity: "ERROR"

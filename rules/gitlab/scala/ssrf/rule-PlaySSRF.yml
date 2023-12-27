@@ -1,0 +1,42 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_ssrf_rule-PlaySSRF"
+  languages:
+  - "scala"
+  message: |
+    Server-Side Request Forgery occur when a web server executes a request to a user supplied
+    destination parameter that is not validated. Such vulnerabilities could allow an attacker to
+    access internal services or to launch attacks from your web server.
+  metadata:
+    category: "security"
+    cwe: "CWE-918"
+    shortDescription: "Server-Side Request Forgery (SSRF)"
+  patterns:
+  - pattern-not-inside: |
+      object $CLAZZ {
+        ...
+        $ARG = ...
+        ...
+      }
+  - pattern-not-inside: |
+      class $CLAZZ {
+        ...
+        $ARG = ...
+        ...
+      }
+  - pattern-either:
+    - patterns:
+      - pattern-inside: |
+          import play.api.libs.ws._
+          ...
+      - pattern-not: "($W:WSClient).url(\"...\")"
+      - pattern-not: "($W:WSClient).url(\"...\" + \"...\")"
+      - pattern: "($W:WSClient).url(<...$ARG...>)"
+    - patterns:
+      - pattern: "($W:play.api.libs.ws.WSClient).url(<...$ARG...>)"
+      - pattern-not: "($W:play.api.libs.ws.WSClient).url(\"...\")"
+      - pattern-not: "($W:play.api.libs.ws.WSClient).url(\"...\" + \"...\")"
+  severity: "ERROR"

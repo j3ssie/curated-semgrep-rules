@@ -1,0 +1,60 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_inject_rule-PathTraversalIn"
+  languages:
+  - "scala"
+  message: |
+    A file is opened to read its content. The filename comes from an input parameter. If an
+    unfiltered parameter is passed to this file API, files from an arbitrary filesystem location
+    could be read. This rule identifies potential path traversal vulnerabilities. In many cases,
+    the constructed file path cannot be controlled by the user.
+  metadata:
+    category: "security"
+    cwe: "CWE-22"
+    shortDescription: "Improper Limitation of a Pathname to a Restricted Directory
+      ('Path Traversal')"
+    technology:
+    - "scala"
+  patterns:
+  - pattern-either:
+    - patterns:
+      - pattern-inside: |
+          def $FUNC(...,$ARGS: Array[String], ...): $TYPE = {
+          ...
+          }
+      - pattern-inside: |
+          $VAR = $ARGS($IDX)
+          ...
+    - pattern-inside: |
+        def $FUNC(...,$VAR: String, ...): $TYPE = {
+        ...
+        }
+  - pattern-not-inside: |
+      ...
+      org.apache.commons.io.FilenameUtils.getName($VAR)
+      ...
+  - pattern-either:
+    - patterns:
+      - pattern-inside: |
+          $U = new java.net.URI($VAR)
+          ...
+      - pattern-either:
+        - pattern: "new java.io.File($U)"
+        - pattern: "java.nio.file.Paths.get($U)"
+    - pattern: "new java.io.RandomAccessFile(..., $VAR,...)"
+    - pattern: "new java.io.FileReader(<...$VAR...>, ...)"
+    - pattern: "new javax.activation.FileDataSource(..., $VAR, ...)"
+    - pattern: "new java.io.FileInputStream(..., $VAR, ...)"
+    - pattern: "new java.io.File(<...$VAR...>, ...)"
+    - pattern: "java.nio.file.Paths.get(...,$VAR,...)"
+    - pattern: "java.io.File.createTempFile(...,$VAR, ...)"
+    - pattern: "java.io.File.createTempDirectory(...,$VAR,...)"
+    - pattern: "java.nio.file.Files.createTempFile(..., $VAR, ...)"
+    - pattern: "java.nio.file.Files.createTempDirectory(..., $VAR, ...)"
+    - pattern: "scala.io.Source.from(<...$VAR...>)"
+    - pattern: "scala.io.Source.fromFile(<...$VAR...>)"
+    - pattern: "scala.io.Source.fromString(<...$VAR...>)"
+  severity: "ERROR"

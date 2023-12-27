@@ -1,0 +1,19 @@
+rules:
+- id: insecure-deserialization
+  metadata:
+    cwe: 'CWE-502'
+    owasp: 'A8: Insecure Deserialization'
+    references:
+      - https://cwe.mitre.org/data/definitions/915.html
+      - https://owasp.org/www-project-top-ten/2017/A8_2017-Insecure_Deserialization
+      - https://sucuri.net/guides/owasp-top-10-security-vulnerabilities-2020/
+  patterns:
+    - pattern: $FUNC(...);
+    - metavariable-regex:
+        metavariable: '$FUNC'
+        regex: "(unserialize)"
+
+  message: |
+    The software receives input from an upstream component that specifies multiple attributes, properties, or fields that are to be initialized or updated in an object, but it does not properly control which attributes can be modified.
+  languages: [php]
+  severity: ERROR

@@ -1,0 +1,42 @@
+# yamllint disable
+# License: GNU Lesser General Public License v3.0
+# source (original): https://github.com/ajinabraham/njsscan/blob/master/njsscan/rules/semantic_grep/xml/xml_entity_expansion_dos.yaml
+# hash: e7a0a61
+# yamllint enable
+---
+rules:
+- id: "rules_lgpl_javascript_xml_rule-node-entity-expansion"
+  patterns:
+  - pattern-either:
+    - pattern-inside: |-
+        function ($REQ, $RES, ...) {...}
+    - pattern-inside: |-
+        function $FUNC($REQ, $RES, ...) {...}
+    - pattern-inside: |-
+        $X = function $FUNC($REQ, $RES, ...) {...}
+    - pattern-inside: |-
+        var $X = function $FUNC($REQ, $RES, ...) {...};
+    - pattern-inside: |-
+        $APP.$METHOD(..., function $FUNC($REQ, $RES, ...) {...})
+  - pattern-either:
+    - pattern: |
+        $PARSER = new expat.Parser()
+        ...
+        $PARSER.write(..., <... $REQ.$QUERY ...>, ...)
+    - pattern: |
+        $PARSER = new expat.Parser()
+        ...
+        $PARSER.write(..., <... $REQ.$QUERY.$FOO ...>, ...)
+    - pattern: |
+        $PARSER = new expat.Parser()
+        ...
+        $PARSER.write(..., <... $REQ.$QUERY.$FOO.$FILE ...>, ...)
+  message: |
+    User controlled data in XML Parsers can result in XML Internal Entity Processing vulnerabilities like in DoS.
+  languages:
+  - "javascript"
+  severity: "ERROR"
+  metadata:
+    owasp: "A4:2017-XML External Entities (XXE)"
+    cwe: "CWE-776: Improper Restriction of Recursive Entity References in DTDs (XML
+      Entity Expansion)"

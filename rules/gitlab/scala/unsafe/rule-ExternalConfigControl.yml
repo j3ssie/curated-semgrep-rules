@@ -1,0 +1,24 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_unsafe_rule-ExternalConfigControl"
+  languages:
+  - "scala"
+  message: |
+    Allowing external control of system settings can disrupt service or cause an application to
+    behave in unexpected, and potentially malicious ways. An attacker could cause an error by
+    providing a nonexistent catalog name or connect to an unauthorized portion of the database.
+  metadata:
+    category: "security"
+    cwe: "CWE-15"
+    shortDescription: "External Control of System or Configuration Setting"
+    technology:
+    - "scala"
+  patterns:
+  - pattern: |
+      $TAINTED = ($REQ: HttpServletRequest).getParameter(...);
+      ...
+      ($CONN: java.sql.Connection).setCatalog($TAINTED);
+  severity: "WARNING"

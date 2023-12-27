@@ -1,0 +1,171 @@
+stages:
+  - prepare
+  - verify
+  - tag
+  - upload
+  - release
+  - test
+
+include:
+  - template: Jobs/SAST.gitlab-ci.yml
+  - template: 'Workflows/Branch-Pipelines.gitlab-ci.yml' # prevent duplicate pipelines
+
+variables:
+  YAJSV_DOWNLOAD_URL: "https://github.com/neilpa/yajsv/releases/download/v1.4.1/yajsv.linux.amd64"
+
+# make sure the rules adhere to our quality guidelines
+rulecheck-quality:
+  stage: prepare
+  image: ruby:3-alpine
+  before_script:
+    - apk add --no-cache yaml-dev alpine-sdk bash python3 py3-pip curl
+    - gem install psych yaml fileutils json-schema word_wrap
+  script:
+    - curl --retry 3 --retry-delay 10 --silent --show-error --fail "$YAJSV_DOWNLOAD_URL" --output /usr/bin/yajsv
+    - chmod +x /usr/bin/yajsv
+    - pip3 install --break-system-packages yamllint codespell
+    - yamllint .
+    - ./ci/schema.rb .
+    - ./ci/rule_schema.sh
+    - ./ci/format.rb
+    - ./ci/codespell.sh
+    - ./ci/license_header.sh
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: never
+    - when: always
+
+rulecheck-tests:
+  stage: verify
+  image: registry.gitlab.com/security-products/semgrep:latest
+  script:
+    - semgrep --metrics=off --test ./
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: never
+    - changes:
+        - "{c,csharp,go,java,javascript,python,scala}/**/*"
+        - .gitlab-ci.yml
+
+mapping-check:
+  stage: verify
+  image: ruby:3-alpine
+  before_script:
+    - apk add --no-cache yaml-dev alpine-sdk
+    - gem install yaml json json-schema
+  script:
+    - ./ci/mappings.rb
+    - ./ci/mappings-schema.rb
+    - ./ci/testcase_presence_check.rb
+    - git diff --exit-code
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: never
+    - when: always
+
+java-build-check:
+  stage: verify
+  image: openjdk:17-alpine
+  before_script:
+    - apk add --no-cache bash maven
+  script:
+    ./ci/scaffold_java_build.sh
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: never
+    - changes:
+        - "java/**/*"
+        - ci/scaffold_java_build.sh
+
+scala-build-check:
+  stage: verify
+  image: sbtscala/scala-sbt:eclipse-temurin-18.0.1_1.7.1_2.13.8
+  before_script:
+    - apt update
+    - apt install -y maven
+  script:
+    ./ci/scaffold_scala_build.sh
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: never
+    - changes:
+        - "scala/**/*"
+        - ci/scaffold_scala_build.sh
+
+build-and-verify:
+  stage: verify
+  image: ruby:3-alpine
+  before_script:
+    - apk update && apk add bash jq nodejs npm git python3 py3-pip zip curl
+    - npm install -g changelog-parser
+    - gem install word_wrap
+    - export VERSION=$(curl "https://gitlab.com/gitlab-org/security-products/analyzers/semgrep/-/raw/main/Dockerfile" | sed -n 's/ARG SCANNER_VERSION=\([^ ]*\)/\1/p')
+    - echo "Installing semgrep version $VERSION"
+    - pip3 install --break-system-packages semgrep==$VERSION
+  script:
+    - export CHANGELOG_VERSION=$(changelog-parser | jq -r '.versions[0].title')
+    - ./ci/deploy.sh $CHANGELOG_VERSION
+    - ci/semgrep_validity_check.sh
+    - ci/unique_ids.rb
+    - echo "EXTRA_DESCRIPTION=sast-rules release" >> variables.env
+    - echo "TAG=${CHANGELOG_VERSION}" >> variables.env
+    - zip -r sast-rules.zip ./dist
+  artifacts:
+    reports:
+      dotenv: variables.env
+    expose_as: "sast-rules"
+    paths: ["sast-rules.zip"]
+    when: on_success
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: never
+    - when: always
+
+upload:
+  stage: upload
+  image: curlimages/curl:latest
+  needs:
+    - job: build-and-verify
+      artifacts: true
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: never
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  script:
+    - if [[ $LATEST == $TAG ]]; then echo "skipping upload as this version already exists" && exit 0; fi
+    - echo "Publishing ${TAG}"
+    - |
+      curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file sast-rules.zip "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/sast-rules/${TAG}/sast-rules.zip"
+    - |
+      curl --request POST --header "JOB-TOKEN: ${CI_JOB_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/repository/tags?tag_name=${TAG}&ref=main"
+
+release_job:
+  stage: release
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  needs:
+    - job: build-and-verify
+      artifacts: true
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
+  script:
+    - echo "running release_job for $TAG"
+  release:
+    name: 'Release $TAG'
+    description: '$EXTRA_DESCRIPTION'
+    tag_name: '$TAG'
+    ref: '$CI_COMMIT_SHA'
+    assets:
+      links:
+        - name: 'sast-rules'
+          url: '${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/sast-rules/${TAG}/sast-rules'
+
+semgrep-sast:
+  stage: test
+  artifacts:
+    reports:
+      sast: gl-sast-report.json
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: never
+    - when: always

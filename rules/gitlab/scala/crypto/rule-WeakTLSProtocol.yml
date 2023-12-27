@@ -1,0 +1,26 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_crypto_rule-WeakTLSProtocol"
+  languages:
+  - "scala"
+  message: |
+    A HostnameVerifier that accept any host are often use because of certificate
+    reuse on many hosts. As a consequence, this is vulnerable to Man-in-the-middleattacks
+    attacks since the client will trust any certificate.
+  metadata:
+    category: "security"
+    cwe: "CWE-295"
+    shortDescription: "Improper Certificate Validation"
+  patterns:
+  - pattern-either:
+    - pattern: "new org.apache.http.impl.client.DefaultHttpClient()"
+    - pattern: "javax.net.ssl.SSLContext.getInstance(\"SSL\")"
+    - patterns:
+      - pattern-inside: |
+          import javax.net.ssl._
+          ...
+      - pattern: "SSLContext.getInstance(\"SSL\")"
+  severity: "WARNING"

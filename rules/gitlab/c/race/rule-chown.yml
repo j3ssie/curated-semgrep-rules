@@ -1,0 +1,29 @@
+# yamllint disable
+# The ruleset is generated from flawfinder official rule repository hosted on github.
+# License: GPL 2.0 (c) 1989, 1991 Free Software Foundation, Inc.
+# source: https://github.com/david-a-wheeler/flawfinder/blob/e0d8827c3b714a883ce8036edc832721f4619524/flawfinder.py
+# yamllint enable
+---
+rules:
+- id: "c_race_rule-chown"
+  languages:
+  - "c"
+  message: |
+    Usage of the `chown` function call hints at a potential Time Of Check Time Of Use (TOCTOU)
+    vulnerability. An attacker may be able to modify the file being specified by the `chmod`
+    function prior to the `chown` function being called. Since `chown` will resolve symbolic links,
+    an attacker may be able to exploit this fact to have files outside of their control modified.
+
+    It is recommended that the `fchown` or the `lchown` functions be used instead. The `fchown`
+    function takes a file descriptor instead of a file. The `lchown` function does not follow
+    symbolic links. Ensure the opened file descriptor is pointing to the correct file or
+    directory prior to executing `fchown` or any other file based operations.
+
+    For more information please see:
+    https://wiki.sei.cmu.edu/confluence/display/c/FIO01-C.+Be+careful+using+functions+that+use+file+names+for+identification
+  metadata:
+    shortDescription: "Potential time of check time of use vulnerability (chown)"
+    cwe: "CWE-362"
+    owasp: "A5:2017-Broken Access Control"
+  pattern: "chown(...)"
+  severity: "ERROR"

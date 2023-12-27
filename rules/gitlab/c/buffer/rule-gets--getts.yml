@@ -1,0 +1,30 @@
+# yamllint disable
+# The ruleset is generated from flawfinder official rule repository hosted on github.
+# License: GPL 2.0 (c) 1989, 1991 Free Software Foundation, Inc.
+# source: https://github.com/david-a-wheeler/flawfinder/blob/e0d8827c3b714a883ce8036edc832721f4619524/flawfinder.py
+# yamllint enable
+---
+rules:
+- id: "c_buffer_rule-gets--getts"
+  languages:
+  - "c"
+  message: |
+    The gets() function reads a line from stdin into the provided buffer
+    until either a terminating newline or EOF. This terminating newline or
+    EOF is replaced with a null byte `'\0'`. No check for buffer overruns are
+    performed so it is recommended to use `fgets()` instead. Do note
+    that some platforms will continue reading data after a `'\0'` is encountered.
+
+    Usage of `fgets()` is not recommended for reading binary based files or inputs,
+    instead the `read` or `fread` functions should be used.
+
+    For more information please see: https://linux.die.net/man/3/fgets
+  metadata:
+    shortDescription: "Use of deprecated function (gets)"
+    cwe: "CWE-120"
+    owasp: "A1:2017-Injection"
+  pattern-either:
+  - pattern: "gets(...)"
+  - pattern: "_getts(...)"
+  - pattern: "_getws(...)"
+  severity: "ERROR"

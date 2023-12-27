@@ -1,0 +1,30 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_password_rule-HardcodeKeySuspiciousName"
+  languages:
+  - "scala"
+  message: |
+    Cryptographic keys should not be kept in the source code. The source code can be widely shared
+    in an enterprise environment, and is certainly shared in open source. To be managed safely,
+    passwords and secret keys should be stored in separate configuration files or keystores.
+  metadata:
+    category: "security"
+    cwe: "CWE-321"
+    shortDescription: "Use of Hard-coded Cryptographic Key"
+    technology:
+    - "scala"
+  patterns:
+  - pattern-either:
+    - pattern: "val $VAR = Array[Byte](...)"
+    - pattern: "val $VAR = Array[char](...)"
+    - pattern: "var $VAR = Array[Byte](...)"
+    - pattern: "var $VAR = Array[char](...)"
+    - pattern: "var $VAR = Array(...)"
+    - pattern: "val $VAR = Array(...)"
+  - metavariable-regex:
+      metavariable: "$VAR"
+      regex: "(?i).*(pass|pwd|psw|secret|key|cipher|crypt|des|aes|mac|private|sign|cert).*"
+  severity: "WARNING"

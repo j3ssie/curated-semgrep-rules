@@ -1,0 +1,57 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "python_urlopen_rule-urllib-urlopen1"
+  languages:
+  - "python"
+  message: |
+    The application was found passing in a non-literal value to the `urllib` methods which issue
+    requests. `urllib` supports the `file://` scheme, which may allow an adversary who can control
+    the URL value to read arbitrary files on the file system.
+
+    To remediate this issue either hardcode the URLs being used in urllib or use the `requests`
+    module instead.
+
+    Example using the `requests` module to issue an HTTPS request:
+    ```
+    import requests
+    # Issue a GET request to https://example.com with a timeout of 10 seconds
+    response = requests.get('https://example.com', timeout=10)
+    # Work with the response object
+    # ...
+    ```
+  metadata:
+    cwe: "CWE-939"
+    owasp: "A5:2017-Broken Access Control"
+    shortDescription: "Improper Authorization in Handler for Custom URL Scheme"
+  patterns:
+  - pattern-not: "urllib.$W(\"...\")"
+  - pattern-not: "urllib.request.$W(\"...\")"
+  - pattern-not: "$OPENER.$W(\"...\")"
+  - pattern-either:
+    - patterns:
+      - pattern-either:
+        - pattern: "urllib.urlopen(...)"
+        - pattern: "urllib.request.urlopen(...)"
+        - pattern: "urllib.urlretrieve(...)"
+        - pattern: "urllib.request.urlretrieve(...)"
+    - patterns:
+      - pattern-either:
+        - pattern-inside: |
+            $OPENER = urllib.URLopener(...)
+            ...
+        - pattern-inside: |
+            $OPENER = urllib.request.URLopener(...)
+            ...
+        - pattern-inside: |
+            $OPENER = urllib.FancyURLopener(...)
+            ...
+        - pattern-inside: |
+            $OPENER = urllib.request.FancyURLopener(...)
+            ...
+      - pattern-either:
+        - pattern: "$OPENER.open(...)"
+        - pattern: "$OPENER.retrieve(...)"
+  severity: "WARNING"

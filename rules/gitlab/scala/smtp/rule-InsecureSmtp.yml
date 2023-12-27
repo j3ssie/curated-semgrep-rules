@@ -1,0 +1,35 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_smtp_rule-InsecureSmtp"
+  languages:
+  - "scala"
+  message: |
+    Server identity verification is disabled when making SSL connections.
+  metadata:
+    cwe: "CWE-297"
+    shortDescription: "Improper Validation of Certificate with Host Mismatch"
+  patterns:
+  - pattern-either:
+    - pattern-inside: |
+        $E = new org.apache.commons.mail.SimpleEmail(...);
+        ...
+    - pattern-inside: |
+        $E = new org.apache.commons.mail.Email(...);
+        ...
+    - pattern-inside: |
+        $E = new org.apache.commons.mail.MultiPartEmail(...);
+        ...
+    - pattern-inside: |
+        $E = new org.apache.commons.mail.HtmlEmail(...);
+        ...
+    - pattern-inside: |
+        $E = new org.apache.commons.mail.ImageHtmlEmail(...);
+        ...
+  - pattern-not: |
+      $E.setSSLOnConnect(true);
+      ...
+      $E.setSSLCheckServerIdentity(true);
+  severity: "ERROR"

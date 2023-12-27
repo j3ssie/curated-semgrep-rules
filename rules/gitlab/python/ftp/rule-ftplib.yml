@@ -1,0 +1,51 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "python_ftp_rule-ftplib"
+  languages:
+  - "python"
+  message: |
+    The application was found using an FTP library. As FTP does not provide encryption, it is
+    strongly recommended that any file transfers be done over a more secure transport such as
+    SSH.
+
+    The [paramiko](https://www.paramiko.org/) library can be used with an SCP module to allow
+    secure file transfers.
+
+    Example using `paramiko` SSH client and the `scp` module:
+    ```
+    import paramiko
+    import scp
+
+    # Create an SSH client
+    with paramiko.SSHClient() as ssh:
+        # Load the system host keys so we can confirm the
+        # host we are connecting to is legitimate
+        ssh.load_system_host_keys('/home/appuser/.ssh/known_hosts')
+
+        # Connect to the remote host using our SSH private key
+        ssh.connect(hostname='example.org',
+                    port=22,
+                    username='appuser',
+                    key_filename='/home/appuser/.ssh/private_key')
+
+        # Create an SCP client with the ssh transport and copy files
+        with scp.SCPClient(ssh.get_transport()) as secure_copy:
+            secure_copy.get('remote/test.file', 'local/test.file')
+            secure_copy.put('local/some.file', 'remote/some.file')
+    ```
+
+    For more information on the paramiko module see:
+    - https://www.paramiko.org/
+
+    For more information on the scp module see:
+    - https://github.com/jbardin/scp.py
+  metadata:
+    cwe: "CWE-319"
+    owasp: "A3:2017-Sensitive Data Exposure"
+    category: "security"
+    shortDescription: "Cleartext transmission of sensitive information"
+  pattern: "ftplib.$ANYTHING(...)"
+  severity: "WARNING"

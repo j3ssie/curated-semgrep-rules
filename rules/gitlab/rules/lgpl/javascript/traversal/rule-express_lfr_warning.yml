@@ -1,0 +1,34 @@
+# yamllint disable
+# License: GNU Lesser General Public License v3.0
+# source (original): https://github.com/ajinabraham/njsscan/blob/master/njsscan/rules/semantic_grep/traversal/express_hbs_lfr.yaml
+# hash: e7a0a61
+# yamllint enable
+---
+rules:
+- id: "rules_lgpl_javascript_traversal_rule-express-lfr-warning"
+  patterns:
+  - pattern-not-inside: |
+      require('hbs')
+      ...
+  - pattern-inside: |
+      require('express')
+      ...
+  - pattern-either:
+    - pattern: |
+        $INP = <... $REQ.$QUERY ...>;
+        ...
+        $RES.render($VIEW, <... $INP ...>)
+    - pattern: |
+        $INP = <... $REQ.$QUERY.$FOO ...>;
+        ...
+        $RES.render($VIEW, <... $INP ...>)
+    - pattern: "$RES.render($VIEW, <... $REQ.$QUERY.$FOO ...>)"
+    - pattern: "$RES.render($VIEW, <... $REQ.$BODY ...>)"
+  message: |
+    Untrusted user input in express render() function can result in arbitrary file read if hbs templating is used.
+  languages:
+  - "javascript"
+  severity: "WARNING"
+  metadata:
+    owasp: "A5:2017-Broken Access Control"
+    cwe: "CWE-23: Relative Path Traversal"

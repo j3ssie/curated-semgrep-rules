@@ -1,0 +1,26 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_crypto_rule-BlowfishKeySize"
+  languages:
+  - "scala"
+  message: |
+    A small key size makes the ciphertext vulnerable to brute force attacks. At least 128 bits of
+    entropy should be used when generating the key if use of Blowfish is required.
+  metadata:
+    category: "security"
+    cwe: "CWE-326"
+    shortDescription: "Inadequate Encryption Strength"
+    technology:
+    - "scala"
+  patterns:
+  - pattern-inside: |
+      $KEYGEN = javax.crypto.KeyGenerator.getInstance("Blowfish", ...);
+      ...
+      $KEYGEN.init($KEY_SIZE);
+  - metavariable-comparison:
+      comparison: "$KEY_SIZE < 128"
+      metavariable: "$KEY_SIZE"
+  severity: "WARNING"

@@ -1,0 +1,25 @@
+rules:
+- id: x-forwarded-for
+  metadata:
+    cwe: 'CWE-20'
+    owasp: 'A1: Injection'
+    references:
+      - https://en.wikipedia.org/wiki/X-Forwarded-For
+  patterns:
+    - pattern-inside: |
+        $RETURNTYPE $FUNC (HttpServletRequest $REQ, ...) {
+          ...
+        }
+    - pattern: 
+        $ADDR = $REQ.getHeader($HEADER);
+    - metavariable-regex:
+        metavariable: '$HEADER'
+        regex: '.(X-FORWARDED-FOR|X-Forwarded-For|x-forwarded-for).'
+
+  message: |
+    The X-Forwarded-For (XFF) HTTP header field is a common method for identifying the originating
+    IP address of a client connecting to a web server through an HTTP proxy or load balancer. Since this header 
+    is not set by server and can be easily spoofed by the client It may cause injection attacks if `$ADDR`
+    is not filtered for properly.
+  languages: [java]
+  severity: WARNING

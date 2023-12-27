@@ -1,0 +1,44 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "python_snmp_rule-snmp-weak-cryptography"
+  languages:
+  - "python"
+  message: |
+    Pysnmp was detected using SNMPv3 without authentication or encryption protections enabled.
+    When calling `UsmUserData`, the first argument should be in the format of
+    `usr-<authtype>-<encryption type>`.
+
+    To remediate this issue, the `UsmUserData` should be configured with `usr-sha-aes` for
+    SHA authentication and AES encryption.
+
+    Example querying a device using SNMPv3 with SHA-AES:
+    ```
+    from pysnmp.hlapi import *
+    # Create the snpm iterator
+    iterator = getCmd(
+        SnmpEngine(),
+        # Configure using SHA AES
+        UsmUserData('usr-sha-aes', 'authkey1', 'privkey1',
+                    authProtocol=USM_AUTH_HMAC96_SHA,
+                    privProtocol=USM_PRIV_CFB128_AES),
+        UdpTransportTarget(('demo.snmplabs.com', 161)),
+        ContextData(),
+        ObjectType(ObjectIdentity('SNMPv2-MIB', 'sysDescr', 0))
+    )
+    ```
+
+    For more information on using SNMPv3 with `Pysnmp` see:
+    - https://pysnmp.readthedocs.io/en/latest/examples/hlapi/v3arch/asyncore/sync/manager/cmdgen/snmp-versions.html#snmpv3-auth-sha-privacy-aes128
+  metadata:
+    cwe: "CWE-319"
+    category: "security"
+    shortDescription: "Cleartext Transmission of Sensitive Information"
+  pattern-either:
+  - pattern: "pysnmp.hlapi.UsmUserData($ARG1, $ARG2)"
+  - pattern: "pysnmp.hlapi.UsmUserData($ARG1)"
+  - pattern: "pysnmp.hlapi.UsmUserData(...,'noAuthNoPriv',...)"
+  - pattern: "pysnmp.hlapi.UsmUserData(...,'authNoPriv',...)"
+  severity: "WARNING"

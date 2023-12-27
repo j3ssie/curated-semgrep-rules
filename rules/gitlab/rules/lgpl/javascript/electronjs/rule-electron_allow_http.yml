@@ -1,0 +1,22 @@
+# yamllint disable
+# License: GNU Lesser General Public License v3.0
+# source (original): https://github.com/ajinabraham/njsscan/blob/master/njsscan/rules/semantic_grep/electronjs/security_electron.yaml
+# hash: e7a0a61
+# yamllint enable
+---
+rules:
+- id: "rules_lgpl_javascript_electronjs_rule-electron-allow-http"
+  patterns:
+  - pattern-either:
+    - pattern: |
+        new BrowserWindow({webPreferences: {allowRunningInsecureContent: true}})
+    - pattern: |
+        var $X = {webPreferences: {allowRunningInsecureContent: true}};
+  message: |
+    Application can load content over HTTP and that makes the app vulnerable to Man in the middle attacks.
+  languages:
+  - "javascript"
+  severity: "ERROR"
+  metadata:
+    owasp: "A6:2017-Security Misconfiguration"
+    cwe: "CWE-319: Cleartext Transmission of Sensitive Information"

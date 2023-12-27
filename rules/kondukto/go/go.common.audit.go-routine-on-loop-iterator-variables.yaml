@@ -1,0 +1,55 @@
+rules:
+- id: go.common.audit.go-routine-on-loop-iterator-variables
+  metadata:
+    references:
+      - https://github.com/golang/go/wiki/CommonMistakes
+  patterns:
+  - pattern-inside: |
+      func $FUNC(...) {
+        ...
+      }
+  - pattern-either:
+    - pattern: |
+        for $X, $Y := range $LOOP {
+          ...
+          go func(...) {
+            ...
+            $VAR.$XFUNC($Y)
+            ...
+          }()
+        }
+    - pattern: |
+        for $X, $Y := range $LOOP {
+          ...
+          go func(...) {
+            $VAR.$XFUNC($Y)
+          }()
+        }
+    - pattern: |
+        for $X, $Y := range $LOOP {
+          ...
+          go func(...) {
+            $VAR = $XFUNC($Y)
+          }()
+        }
+    - pattern: |
+        for $X, $Y := range $LOOP {
+          ...
+          go func(...) {
+            ...
+            $VAR = $Y
+            ...
+          }()
+        }
+  - pattern-not: |
+      for $X, $Y := range $LOOP {
+        ...
+        go func(...) {
+          ...
+          }($Y)
+      }
+  message: "In the \"$LOOP\" iteration, \"$Y\" should be added as a parameter to the goroutine"
+  fix: "go func($Y){...}($Y)"
+  languages: [go]
+  severity: INFO
+

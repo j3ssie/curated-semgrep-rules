@@ -1,0 +1,45 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "python_crypto_rule-crypto-encrypt-ec"
+  languages:
+  - "python"
+  message: |
+    The application was found using an insufficient curve size for the Elliptical
+    Cryptography (EC) asymmetric algorithm. NIST recommends using a key size of
+    224 or greater.
+
+    To remediate this issue, replace the current key size with `ec.SECP384R1`,
+
+    Example using `ec.SECP384R1`:
+    ```
+    from cryptography.hazmat.primitives.asymmetric import ec
+    # Generate an EC private key using SECP384R1
+    private_key = ec.generate_private_key(
+        ec.SECP384R1()
+    )
+    # Work with/sign data using the key
+    # ...
+    ```
+
+    For more information on the cryptography module's EC section see:
+    - https://cryptography.io/en/latest/hazmat/primitives/asymmetric/ec/
+  metadata:
+    cwe: "CWE-326"
+    owasp: "A3:2017-Sensitive Data Exposure"
+    category: "security"
+    shortDescription: "Inadequate encryption strength"
+  patterns:
+  - pattern-inside: |-
+      cryptography.hazmat.primitives.asymmetric.ec.generate_private_key(...)
+  - pattern: "cryptography.hazmat.primitives.asymmetric.ec.$SIZE"
+  - metavariable-pattern:
+      metavariable: "$SIZE"
+      pattern-either:
+      - pattern: "SECP192R1"
+      - pattern: "SECT163K1"
+      - pattern: "SECT163R2"
+  - focus-metavariable: "$SIZE"
+  severity: "ERROR"

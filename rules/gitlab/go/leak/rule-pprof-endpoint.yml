@@ -1,0 +1,24 @@
+# yamllint disable
+# License: Apache 2.0 (c) gosec
+# source (original): https://github.com/securego/gosec/blob/master/rules/pprof.go
+# hash: c6e10af 
+# yamllint enable
+---
+rules:
+- id: "go_leak_rule-pprof-endpoint"
+  languages:
+  - "go"
+  patterns:
+  - pattern: |
+      import _ "net/http/pprof"
+  message: |
+    Go has a built in profiling service that is enabled by starting an HTTP server with
+    `net/http/pprof` imported. The `/debug/pprof` endpoint does not require any
+    authentication and can be accessed by anonymous users. This profiling endpoint
+    can leak sensitive information and should not be enabled in production.
+
+    To remediate this, remove the `net/http/pprof` import from the file.
+  metadata:
+    shortDescription: "Active debug code (pprof enabled)"
+    cwe: "CWE-489"
+  severity: "ERROR"

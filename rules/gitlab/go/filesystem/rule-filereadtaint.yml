@@ -1,0 +1,106 @@
+# yamllint disable
+# License: Apache 2.0 (c) gosec
+# source (original): https://github.com/securego/gosec/blob/master/rules/readfile.go
+# yamllint enable
+---
+rules:
+- id: "go_filesystem_rule-filereadtaint"
+  languages:
+  - "go"
+  patterns:
+  - pattern-not-inside: |
+      os.OpenFile(filepath.Clean(...), ...)
+  - pattern-not-inside: |
+      os.Open(filepath.Clean(...))
+  - pattern-not-inside: |
+      ioutil.ReadFile(filepath.Clean(...))
+  - pattern-not-inside: |
+      os.ReadFile(filepath.Clean(...))
+  - pattern-not-inside: |
+      const $ARG = "..."
+      ...
+  - pattern-not-inside: |
+      var $Y string = "..."
+      ...
+      $ARG = $Y
+      ...
+  - pattern-not-inside: |
+      $ARG = filepath.Clean($X)
+      ...
+  - pattern-not: "os.OpenFile(\"...\" + strconv.Itoa($I), ...)"
+  - pattern-not: "os.OpenFile(\"...\", ...)"
+  - pattern-not: "os.Open(\"...\")"
+  - pattern-not: "os.Open(\"...\" + strconv.Itoa($I))"
+  - pattern-not: "ioutil.ReadFile(\"...\", ...)"
+  - pattern-not: "ioutil.ReadFile(\"...\" + strconv.Itoa($I), ...)"
+  - pattern-not: "os.ReadFile(\"...\" + strconv.Itoa($I))"
+  - pattern-not: "os.ReadFile(\"...\")"
+  - pattern-either:
+    - pattern: "os.OpenFile($ARG, ...)"
+    - pattern: "os.Open($ARG)"
+    - pattern: "ioutil.ReadFile($ARG, ...)"
+    - pattern: "os.ReadFile($ARG)"
+  message: |
+    The application dynamically constructs file or path information. If the path
+    information comes from user input, it could be abused to read sensitive files,
+    access other users data or aid in exploitation to gain further system access.
+
+    User input should never be used in constructing paths or files for interacting
+    with the filesystem. This includes filenames supplied by user uploads or downloads.
+    If possible, consider hashing user input or replacing it with unique values.
+    Additionally, use `filepath.Base` to only use the filename and not path information.
+    Always validate the full path prior to opening or writing to any file.
+
+    Example using `filepath.Base`, generating a unique filename without using
+    user input to construct filepath information:
+    ```
+    type userData struct {
+        id           string
+        userFilename string
+    }
+
+    func newUserData(userFilename string) userData {
+        return userData{
+            id:           randomFileID(), // random id as the filename
+            userFilename: userFilename,
+        }
+    }
+
+    // randomFileID generates a random id, to be used as a filename
+    func randomFileID() string {
+        id := make([]byte, 16)
+        if _, err := io.ReadFull(rand.Reader, id); err != nil {
+            log.Fatal(err)
+        }
+        return hex.EncodeToString(id)
+    }
+
+    func main() {
+
+        // user input, saved only as a reference
+        data := newUserData("../../possibly/malicious")
+
+        // restrict all file access to this path
+        const basePath = "/tmp/"
+
+        // resolve the full path, but only use our random generated id
+        resolvedPath, err := filepath.Join(basePath, filepath.Base(data.id))
+        if err != nil {
+            log.Fatal(err)
+        }
+
+        // verify the path is prefixed with our basePath
+        if !strings.HasPrefix(resolvedPath, basePath) {
+            log.Fatal("path does not start with basePath")
+        }
+        // process / work with file
+    }
+    ```
+
+    For more information on path traversal issues see OWASP:
+    https://owasp.org/www-community/attacks/Path_Traversal
+  metadata:
+    shortDescription: "Improper limitation of a pathname to a restricted directory
+      ('Path Traversal')"
+    cwe: "CWE-22"
+  severity: "WARNING"

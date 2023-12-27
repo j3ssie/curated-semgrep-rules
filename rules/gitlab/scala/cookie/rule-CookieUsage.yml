@@ -1,0 +1,37 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_cookie_rule-CookieUsage"
+  languages:
+  - "scala"
+  message: |
+    The information stored in a custom cookie should not be sensitive or related to the session.
+    In most cases, sensitive data should only be stored in session and referenced by the user's
+    session cookie.
+  metadata:
+    category: "security"
+    cwe: "CWE-614"
+    shortDescription: "Sensitive Cookie in HTTPS Session Without 'Secure' Attribute"
+    technology:
+    - "scala"
+  patterns:
+  - pattern-inside: |
+      def $FUNC(..., $REQ: HttpServletRequest, ...): $TYPE = {
+        ...
+      }
+  - pattern-either:
+    - patterns:
+      - pattern-inside: |
+          for ($C <- $REQ.getCookies) {
+              ...
+          }
+      - pattern-either:
+        - pattern: "$C.getName"
+        - pattern: "$C.getValue"
+        - pattern: "$C.getPath"
+    - pattern: "($C: Cookie).getName()"
+    - pattern: "($C: Cookie).getValue"
+    - pattern: "($C: Cookie).getPath"
+  severity: "WARNING"

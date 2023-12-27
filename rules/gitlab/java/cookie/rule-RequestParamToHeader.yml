@@ -1,0 +1,86 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "java_cookie_rule-RequestParamToHeader"
+  languages:
+  - "java"
+  mode: "taint"
+  pattern-sanitizers:
+  - patterns:
+    - pattern-inside: |
+        $STR.replaceAll("$REPLACE_CHAR", "$REPLACER");
+        ...
+    - pattern: "$STR"
+    - metavariable-regex:
+        metavariable: "$REPLACER"
+        regex: ".*^(CRLF).*"
+    - metavariable-regex:
+        metavariable: "$REPLACE_CHAR"
+        regex: "(*CRLF)"
+  - pattern: "org.apache.commons.text.StringEscapeUtils.unescapeJava(...);"
+  pattern-sinks:
+  - pattern: "(javax.servlet.http.HttpServletResponse $RES).setHeader(\"$KEY\", ...);"
+  - pattern: "(javax.servlet.http.HttpServletResponse $RES).addHeader(\"$KEY\", ...);"
+  - pattern: "(javax.servlet.http.HttpServletResponseWrapper $WRP).setHeader(\"$KEY\",
+      ...);"
+  - pattern: "(javax.servlet.http.HttpServletResponseWrapper $WRP).addHeader(\"$KEY\",
+      ...);"
+  pattern-sources:
+  - pattern: "(javax.servlet.http.HttpServletRequest $REQ).getParameter(...);"
+  message: |
+    HTTP Response Splitting is a vulnerability where Carriage Return (CR `\r`) and Line Feed (LF
+    `\n`)
+    characters are introduced into an HTTP header from user-supplied input. By injecting the
+    `\r\n`
+    character sequence, an adversary could potentially modify how the response is interpreted by
+    the
+    client or any down stream caching services. This could allow an adversary to poison the cache
+    data or execute Cross-Site Scripting (XSS) attacks.
+
+    Some Java application servers such as [Apache Tomcat](https://tomcat.apache.org/) will
+    automatically encode
+    characters from being set in response headers as a space `0x20` character. If your application
+    server does
+    not automatically provide this functionality, user-supplied input that is used in header keys
+    or values must be
+    validated.
+
+    Example of validating headers to only allow valid characters:
+    ```
+    // throws an IllegalArgumentException if the provided value contains invalid characters
+    public void validateHeader(String value) throws IllegalArgumentException {
+        char[] chars = value.toCharArray();
+
+        // iterate over every character
+        for (int i = 0; i < chars.length; i++) {
+            char c = chars[i];
+
+            // check for any characters below 0x21 as well as: '"' ',' ';' '\' and 0x7f.
+            if (c < 0x21 || c == '"' || c == ',' || c == ';' || c == '\\' || c == 0x7f) {
+                throw new IllegalArgumentException("Invalid character in cookie detected:
+    {0}".format(Integer.toString(c)));
+            }
+        }
+    }
+    ```
+
+    Alternatively, you could use a string escape package such as
+    [Apache Commons Text](https://commons.apache.org/proper/commons-text/) to escape the input:
+    ```
+    public String escapeValue(String value) {
+      return StringEscapeUtils.escapeJava(value);
+    }
+    ```
+
+    For more information on response splitting attacks see OWASP:
+    https://owasp.org/www-community/attacks/HTTP_Response_Splitting
+  severity: "ERROR"
+  metadata:
+    shortDescription: "Improper neutralization of CRLF sequences in HTTP headers ('HTTP
+      Response Splitting')"
+    category: "security"
+    cwe: "CWE-113"
+    technology:
+    - "java"

@@ -1,0 +1,56 @@
+# yamllint disable
+# License: GNU Lesser General Public License v3.0
+# source (original): https://github.com/ajinabraham/njsscan/blob/master/njsscan/rules/semantic_grep/eval/eval_sandbox.yaml
+# hash: e7a0a61
+# yamllint enable
+---
+rules:
+- id: "rules_lgpl_javascript_eval_rule-sandbox-code-injection"
+  patterns:
+  - pattern-inside: |
+      require('sandbox')
+      ...
+  - pattern-either:
+    - pattern-inside: |-
+        function ($REQ, $RES, ...) {...}
+    - pattern-inside: |-
+        function $FUNC($REQ, $RES, ...) {...}
+    - pattern-inside: |-
+        $X = function $FUNC($REQ, $RES, ...) {...}
+    - pattern-inside: |-
+        var $X = function $FUNC($REQ, $RES, ...) {...};
+    - pattern-inside: |-
+        $APP.$METHOD(..., function $FUNC($REQ, $RES, ...) {...})
+  - pattern-either:
+    - pattern: |
+        $S.run(<... $REQ.$QUERY.$FOO ...>,...)
+    - pattern: |
+        $CODE = <... $REQ.$QUERY.$FOO ...>;
+        ...
+        $S.run(<... $CODE ...>,...)
+    - pattern: |
+        new $SANDBOX(...).run(<... $REQ.$QUERY.$FOO ...>,...)
+    - pattern: |
+        $CODE = <... $REQ.$QUERY.$FOO ...>;
+        ...
+        new $SANDBOX(...).run(<... $CODE ...>,...)
+    - pattern: |
+        $S.run(<... $REQ.$BODY ...>,...)
+    - pattern: |
+        $CODE = <... $REQ.$BODY ...>;
+        ...
+        $S.run(<... $CODE ...>,...)
+    - pattern: |
+        new $SANDBOX(...).run(<... $REQ.$BODY ...>,...)
+    - pattern: |-
+        $CODE = <... $REQ.$BODY ...>;
+        ...
+        new $SANDBOX(...).run(<... $CODE ...>,...)
+  message: |
+    Unrusted data in `sandbox` can result in code injection.
+  severity: "ERROR"
+  languages:
+  - "javascript"
+  metadata:
+    owasp: "A1:2017-Injection"
+    cwe: "CWE-94: Improper Control of Generation of Code (Code Injection)"

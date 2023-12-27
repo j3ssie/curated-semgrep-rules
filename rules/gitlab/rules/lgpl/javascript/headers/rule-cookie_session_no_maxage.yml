@@ -1,0 +1,55 @@
+# yamllint disable
+# License: GNU Lesser General Public License v3.0
+# source (original): https://github.com/ajinabraham/njsscan/blob/master/njsscan/rules/semantic_grep/headers/header_cookie.yaml
+# hash: e7a0a61
+# yamllint enable
+---
+rules:
+- id: "rules_lgpl_javascript_headers_rule-cookie-session-no-maxage"
+  patterns:
+  - pattern-either:
+    - pattern-inside: |
+        $SESSION = require('cookie-session')
+        ...
+    - pattern-inside: |
+        $SESSION = require('express-session')
+        ...
+  - pattern: "$SESSION(...)"
+  - pattern-not-inside: |-
+      $SESSION(<... {cookie:{maxAge:...}} ...>,...)
+  - pattern-not-inside: |
+      $OPTS = <... {cookie:{maxAge:...}} ...>;
+      ...
+      $SESSION($OPTS,...)
+  - pattern-not-inside: |
+      $OPTS = ...;
+      ...
+      $COOKIE = <... {maxAge:...} ...>;
+      ...
+      $SESSION($OPTS,...)
+  - pattern-not-inside: |
+      $OPTS = ...;
+      ...
+      $OPTS.cookie = <... {maxAge:...} ...>;
+      ...
+      $SESSION($OPTS,...)
+  - pattern-not-inside: |
+      $OPTS = ...;
+      ...
+      $COOKIE.maxAge = ...;
+      ...
+      $SESSION($OPTS,...)
+  - pattern-not-inside: |-
+      $OPTS = ...;
+      ...
+      $OPTS.cookie.maxAge = ...;
+      ...
+      $SESSION($OPTS,...)
+  message: |
+    'Session middleware settings: `maxAge` not set. Use it to set expiration date for cookies.'
+  severity: "INFO"
+  languages:
+  - "javascript"
+  metadata:
+    owasp: "A2:2017-Broken Authentication"
+    cwe: "CWE-613: Insufficient Session Expiration"

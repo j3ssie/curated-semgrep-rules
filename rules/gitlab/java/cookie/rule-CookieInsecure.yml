@@ -1,0 +1,50 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "java_cookie_rule-CookieInsecure"
+  languages:
+  - "java"
+  pattern-either:
+  - patterns:
+    - pattern: |
+        javax.servlet.http.Cookie $C = new Cookie(..., ...);
+        ...
+        (HttpServletResponse $RESP).addCookie($C);
+    - pattern-not-inside: |
+        javax.servlet.http.Cookie $C = new Cookie(..., ...);
+        ...
+        $C.setSecure(true);
+        ...
+        (HttpServletResponse $RESP).addCookie($C);
+  - pattern: "(javax.servlet.http.Cookie $C).setSecure(false);"
+  message: |
+    The `Secure` attribute when set to `true` protects the cookie value from being being
+    transmitted over clear text
+    communication paths such as HTTP. By enabling this protection, the cookie will only be sent
+    over HTTPS.
+
+    Example of protecting a `Cookie`:
+    ```
+    // Create an Secure cookie.
+    Cookie someCookie = new Cookie("SomeCookieName", "SomeValue");
+    // Set Secure flag to true
+    someCookie.setSecure(true);
+    ```
+
+    For more information see:
+    https://jakarta.ee/specifications/servlet/4.0/apidocs/javax/servlet/http/cookie#setSecure-boolean-
+
+    Session cookies should be configured with the following security directives:
+
+    - [HTTPOnly](https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies#restrict_access_to_cookies)
+    - [SameSite](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie/SameSite)
+    - [Secure](https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies#restrict_access_to_cookies)
+  severity: "WARNING"
+  metadata:
+    shortDescription: "Sensitive cookie in HTTPS session without 'Secure' attribute"
+    category: "security"
+    cwe: "CWE-614"
+    technology:
+    - "java"

@@ -1,0 +1,27 @@
+# yamllint disable
+# The ruleset is generated from flawfinder official rule repository hosted on github.
+# License: GPL 2.0 (c) 1989, 1991 Free Software Foundation, Inc.
+# source: https://github.com/david-a-wheeler/flawfinder/blob/e0d8827c3b714a883ce8036edc832721f4619524/flawfinder.py
+# yamllint enable
+---
+rules:
+- id: "c_misc_rule-SetSecurityDescriptorDacl"
+  languages:
+  - "c"
+  message: |
+    When `SetSecurityDescriptorDacl` is called with a null `pDacl` parameter and the
+    `bDaclPresent` flag is `TRUE`, all access to the object is allowed. An attacker
+    could set the object to Deny all, which would include even the Administrator user(s).
+
+    Either call `SetSecurityDescriptorDacl` with bDaclPresent as `FALSE`, or supply a valid
+    non-null `pDacl` parameter value.
+
+    For more information please see:
+    https://learn.microsoft.com/en-us/windows/win32/api/securitybaseapi/nf-securitybaseapi-setsecuritydescriptordacl#remarks
+  metadata:
+    shortDescription: "Null ACL when calling SetSecurityDescriptorDacl may allow all
+      access to objects"
+    cwe: "CWE-732"
+    owasp: "A5:2017-Broken Access Control"
+  pattern: "SetSecurityDescriptorDacl(...)"
+  severity: "ERROR"

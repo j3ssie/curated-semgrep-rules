@@ -1,0 +1,42 @@
+# yamllint disable
+# License: Apache 2.0 (c) gosec
+# source (original): https://github.com/securego/gosec/blob/master/rules/fileperms.go
+# hash: c6e10af 
+# yamllint enable
+---
+rules:
+- id: "go_file-permissions_rule-mkdir"
+  languages:
+  - "go"
+  patterns:
+  - pattern-either:
+    - pattern: "os.Mkdir(...,$MASK)"
+    - pattern: "os.MkdirAll(...,$MASK)"
+  - metavariable-comparison:
+      metavariable: "$MASK"
+      comparison: "$MASK > 0o750"
+      base: 8
+  message: |
+    The application was found setting directory permissions to overly permissive values. Consider
+    using the following values if the application user is the only process to access
+    files in the directory specified:
+    - 0700 - read/write access to the files in the directory
+
+    Another common value is `0750` which allows the application user read/write access and group
+    users to read the files contained in the directory.
+
+    Example creating a directory with read/write permissions for only the application user:
+    ```
+    err := os.Mkdir("directory", 0700)
+    if err != nil {
+      log.Fatal(err)
+    }
+    ```
+
+    For all other values please see:
+    https://en.wikipedia.org/wiki/File-system_permissions#Numeric_notation
+  metadata:
+    shortDescription: "Incorrect permission assignment for critical resource"
+    cwe: "CWE-732"
+    owasp: "A6:2017-Security Misconfiguration"
+  severity: "WARNING"

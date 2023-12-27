@@ -1,0 +1,12 @@
+ignore: |
+  .git
+  .gitlab-ci.yml
+  .yamllint
+  ci/rule_schema.yml
+  mappings/*.yml
+
+rules:
+  line-length:
+    max: 250
+    level: warning
+  indentation: {spaces: 2, indent-sequences: consistent}

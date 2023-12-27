@@ -1,0 +1,71 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "java_password_rule-HardcodeKey"
+  languages:
+  - "java"
+  pattern-either:
+  - patterns:
+    - pattern-not-inside: |
+        $FUNC(...,byte[] $KEY_BYTES, ...) {
+            ...
+        }
+    - pattern-either:
+      - pattern: "new DESKeySpec((byte[] $KEY_BYTES));"
+      - pattern: "new DESedeKeySpec((byte[] $KEY_BYTES));"
+      - pattern: "new KerberosKey(..., (byte[] $KEY_BYTES), ..., ...);"
+      - pattern: "new SecretKeySpec((byte[] $KEY_BYTES), ...);"
+      - pattern: "new X509EncodedKeySpec((byte[] $KEY_BYTES));"
+      - pattern: "new PKCS8EncodedKeySpec((byte[] $KEY_BYTES));"
+      - pattern: "new KeyRep(...,(byte[] $KEY_BYTES));"
+      - pattern: "new KerberosTicket(...,(byte[] $KEY_BYTES),...);"
+    - metavariable-pattern:
+        metavariable: "$KEY_BYTES"
+        patterns:
+        - pattern-not-regex: "(null)"
+  - patterns:
+    - pattern-not-inside: |
+        $FUNC(..., BigInteger $PRIVATE_KEY, ...) {
+            ...
+        }
+    - pattern-either:
+      - pattern: "new DSAPrivateKeySpec((BigInteger $PRIVATE_KEY), ...);"
+      - pattern: "new DSAPublicKeySpec((BigInteger $PRIVATE_KEY), ...);"
+      - pattern: "new DHPrivateKeySpec((BigInteger $PRIVATE_KEY), ...);"
+      - pattern: "new DHPublicKeySpec((BigInteger $PRIVATE_KEY), ...);"
+      - pattern: "new ECPrivateKeySpec((BigInteger $PRIVATE_KEY), ...);"
+      - pattern: "new RSAPrivateKeySpec((BigInteger $PRIVATE_KEY), ...);"
+      - pattern: "new RSAMultiPrimePrivateCrtKeySpec((BigInteger $PRIVATE_KEY), ...);"
+      - pattern: "new RSAPrivateCrtKeySpec((BigInteger $PRIVATE_KEY), ...);"
+      - pattern: "new RSAPublicKeySpec((BigInteger $PRIVATE_KEY), ...);"
+    - metavariable-pattern:
+        metavariable: "$PRIVATE_KEY"
+        patterns:
+        - pattern-not-regex: "(null)"
+  message: |
+    A potential cryptographic key was identified in a hard-coded string.
+    Cryptographic keys should not be stored directly in code
+    but loaded from secure locations such as a Key Management System (KMS).
+
+    The purpose of using a Key Management System is so access can be audited and keys easily
+    rotated
+    in the event of a breach. By hardcoding passwords, it will be extremely difficult to determine
+    when or if, a key is compromised.
+
+    The recommendation on which KMS to use depends on the environment the application is running
+    in:
+
+    - For Google Cloud Platform consider [Cloud Key Management](https://cloud.google.com/kms/docs)
+    - For Amazon Web Services consider [AWS Key Management](https://aws.amazon.com/kms/)
+    - For on premise or other alternatives to cloud providers, consider [Hashicorp's
+    Vault](https://www.vaultproject.io/)
+    - For other cloud providers, please see their documentation
+  severity: "ERROR"
+  metadata:
+    shortDescription: "Use of hard-coded cryptographic key"
+    category: "security"
+    cwe: "CWE-321"
+    technology:
+    - "java"

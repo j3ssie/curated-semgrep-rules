@@ -1,0 +1,20 @@
+# yamllint disable
+# License: GNU Lesser General Public License v3.0
+# source (original): https://github.com/ajinabraham/njsscan/blob/master/njsscan/rules/semantic_grep/xss/xss_templates.yaml
+# hash: e7a0a61
+# yamllint enable
+---
+rules:
+- id: "rules_lgpl_javascript_xss_rule-handlebars-safestring"
+  pattern-either:
+  - pattern: "$X.SafeString(...)"
+  - pattern: "new Handlebars.SafeString(...)"
+  message: |
+    Handlebars SafeString will not escape the data passed through it. Untrusted user input passing through SafeString can cause XSS.
+  languages:
+  - "javascript"
+  severity: "ERROR"
+  metadata:
+    owasp: "A1:2017-Injection"
+    cwe: "CWE-79: Improper Neutralization of Input During Web Page Generation (Cross-site
+      Scripting)"

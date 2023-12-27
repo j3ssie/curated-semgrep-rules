@@ -1,0 +1,25 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_strings_rule-ModifyAfterValidation"
+  patterns:
+  - pattern: |
+      $Y.matcher($VAR);
+      ...
+      $VAR.$METHOD(...);
+  - metavariable-regex:
+      metavariable: "$METHOD"
+      regex: "(replace)"
+  languages:
+  - "scala"
+  message: |
+    CERT: IDS11-J. Perform any string modifications before validation
+  metadata:
+    shortDescription: "Collapse of data into unsafe value"
+    category: "security"
+    cwe: "CWE-182"
+    confidence: "HIGH"
+  severity: "WARNING"

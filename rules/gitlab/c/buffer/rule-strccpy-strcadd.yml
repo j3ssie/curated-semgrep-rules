@@ -1,0 +1,25 @@
+# yamllint disable
+# The ruleset is generated from flawfinder official rule repository hosted on github.
+# License: GPL 2.0 (c) 1989, 1991 Free Software Foundation, Inc.
+# source: https://github.com/david-a-wheeler/flawfinder/blob/e0d8827c3b714a883ce8036edc832721f4619524/flawfinder.py
+# yamllint enable
+---
+rules:
+- id: "c_buffer_rule-strccpy-strcadd"
+  languages:
+  - "c"
+  message: |
+    The `strccpy` and `strcadd` functions do not allow the caller to check that the destination
+    size
+    of the buffer will fit the input buffer prior to copying.
+
+    For more information please see:
+    https://docs.oracle.com/cd/E18752_01/html/816-5172/streadd-3gen.html
+  metadata:
+    shortDescription: "Insecure string processing functions"
+    cwe: "CWE-120"
+    owasp: "A1:2017-Injection"
+  pattern-either:
+  - pattern: "strccpy(...)"
+  - pattern: "strcadd(...)"
+  severity: "INFO"

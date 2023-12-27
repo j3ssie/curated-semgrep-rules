@@ -1,0 +1,39 @@
+# yamllint disable
+# License: Apache 2.0 (c) gosec
+# source (original): https://github.com/securego/gosec/blob/master/rules/unsafe.go
+# hash: c6e10af 
+# yamllint enable
+---
+rules:
+- id: "go_unsafe_rule-unsafe"
+  languages:
+  - "go"
+  patterns:
+  - pattern-either:
+    - pattern: "unsafe.Alignof(...)"
+    - pattern: "unsafe.Offsetof(...)"
+    - pattern: "unsafe.Sizeof(...)"
+    - pattern: "unsafe.Pointer(...)"
+  message: |
+    The `unsafe` package in Go allows low-level access to memory management features.
+    This includes pointers and direct access to memory. The Go compiler will no longer
+    be able to enforce type safety when working with the `unsafe` pointer types.
+
+    While powerful, access to these functions can lead to many security related issues
+     such as:
+
+    - [Buffer overflows](https://owasp.org/www-community/vulnerabilities/Buffer_Overflow) which
+    can lead to code execution.
+    can lead to code execution
+    - [Use after free](https://owasp.org/www-community/vulnerabilities/Using_freed_memory) which
+    can lead to code execution.
+    can lead to code execution
+    - [Information/Memory leaks](https://owasp.org/www-community/vulnerabilities/Memory_leak)
+    which can leak sensitive information, including data which can
+    defeat other protection mechanisms or cause the system to run out of memory.
+
+    Unless required, all calls to the `unsafe` package should be removed.
+  metadata:
+    shortDescription: "Use of inherently dangerous function (unsafe package)"
+    cwe: "CWE-242"
+  severity: "INFO"

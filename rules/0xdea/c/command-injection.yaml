@@ -1,0 +1,25 @@
+rules:
+  - id: raptor-command-injection
+    metadata:
+      author: Marco Ivaldi <raptor@0xdeadbeef.info>
+      references:
+        - https://cwe.mitre.org/data/definitions/676
+        - https://cwe.mitre.org/data/definitions/78
+        - https://cwe.mitre.org/data/definitions/88
+        - https://g.co/kgs/PCHQjJ
+        - https://www.sei.cmu.edu/downloads/sei-cert-c-coding-standard-2016-v01.pdf
+      confidence: HIGH
+      # NOTE: see also cpp.system-command.*.
+    message: >-
+      The software constructs an OS command using externally-influenced input, 
+      but it does not neutralize or incorrectly neutralizes special elements 
+      that could modify the intended OS command.
+    severity: ERROR
+    languages:
+      - c
+      - cpp
+    patterns:
+      - pattern-either:
+        - pattern: system(...)
+        - pattern: popen(...)
+      - pattern-not: $FUN("...", ...)

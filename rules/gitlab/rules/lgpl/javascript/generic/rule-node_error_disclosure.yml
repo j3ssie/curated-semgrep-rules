@@ -1,0 +1,41 @@
+# yamllint disable
+# License: GNU Lesser General Public License v3.0
+# source (original): https://github.com/ajinabraham/njsscan/blob/master/njsscan/rules/semantic_grep/generic/error_disclosure.yaml
+# hash: e7a0a61
+# yamllint enable
+---
+rules:
+- id: "rules_lgpl_javascript_generic_rule-node-error-disclosure"
+  patterns:
+  - pattern-either:
+    - pattern-inside: |-
+        function ($REQ, $RES, ...) {...}
+    - pattern-inside: |-
+        function $FUNC($REQ, $RES, ...) {...}
+    - pattern-inside: |-
+        $X = function $FUNC($REQ, $RES, ...) {...}
+    - pattern-inside: |-
+        var $X = function $FUNC($REQ, $RES, ...) {...};
+    - pattern-inside: |-
+        $APP.$METHOD(..., function $FUNC($REQ, $RES, ...) {...})
+  - pattern-either:
+    - pattern: |
+        $ERR = $ERROR.stack;
+        ...
+        $RES.end($ERR)
+    - pattern: |
+        $ERR = $ERROR.stack;
+        ...
+        $RES.send($ERR)
+    - pattern: |
+        $RES.end($ERR.stack)
+    - pattern: |
+        $RES.send($ERR.stack)
+  message: |
+    Error messages with stack traces can expose sensitive information about the application.
+  languages:
+  - "javascript"
+  severity: "ERROR"
+  metadata:
+    owasp: "A3:2017-Sensitive Data Exposure"
+    cwe: "CWE-209: Generation of Error Message Containing Sensitive Information"

@@ -1,0 +1,103 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "csharp_xss_rule-Xss"
+  mode: "taint"
+  pattern-sources:
+  - patterns:
+    - pattern: "$PARAM"
+    - metavariable-regex:
+        metavariable: "$HTTP_ANNO"
+        regex: "^(Http)"
+    - pattern-inside: |
+        public class $CLASS : Controller {
+          ...
+        }
+    - pattern-inside: |
+        [$HTTP_ANNO]
+        public string $METHOD(...,$PARAM,...){...}
+  pattern-sanitizers:
+  - patterns:
+    - metavariable-regex:
+        metavariable: "$FUNC"
+        regex: "(SerializeObject|HtmlAttributeEncode|HtmlEncode|HtmlFormUrlEncode|UrlEncode|UrlPathEncode|XmlAttributeEncode|XmlEncode|Encode)"
+    - pattern: "$CLASS.$FUNC(...)"
+  pattern-sinks:
+  - pattern: "(System.Web.Mvc.HtmlHelper $E).Raw(...)"
+  - pattern: "(Microsoft.AspNetCore.Mvc.Rendering.IHtmlHelper $E).Raw(...)"
+  - pattern: "(System.Web.HttpResponse $E).AddHeader(...)"
+  - pattern: "(System.Web.HttpResponse $E).AppendHeader(...)"
+  - pattern: "(System.Web.HttpResponse $E).Write(...)"
+  - pattern: "(System.Web.HttpResponse $E).BinaryWrite(...)"
+  - pattern: "(System.Web.HttpResponse $E).TransmitFile(...)"
+  - pattern: "(System.Web.HttpResponse $E).WriteFile(...)"
+  - pattern: "(System.Web.HttpResponseBase $E).AddHeader(...)"
+  - pattern: "(System.Web.HttpResponseBase $E).AppendHeader(...)"
+  - pattern: "(System.Web.HttpResponseBase $E).Write(...)"
+  - pattern: "(System.Web.HttpResponseBase $E).BinaryWrite(...)"
+  - pattern: "(System.Web.HttpResponseBase $E).WriteFile(...)"
+  - pattern: "(System.Web.UI.HtmlTextWriter $E).AddAttribute(...)"
+  - pattern: "(System.Web.UI.HtmlTextWriter $E).AddStyleAttribute(...)"
+  - pattern: "(System.Web.UI.HtmlTextWriter $E).RenderBeginTag(...)"
+  - pattern: "(System.Web.UI.HtmlTextWriter $E).Write(...)"
+  - pattern: "(System.Web.UI.HtmlTextWriter $E).WriteAttribute(...)"
+  - pattern: "(System.Web.UI.HtmlTextWriter $E).WriteBeginTag(...)"
+  - pattern: "(System.Web.UI.HtmlTextWriter $E).WriteEndTag(...)"
+  - pattern: "(System.Web.UI.HtmlTextWriter $E).WriteFullBeginTag(...)"
+  - pattern: "(System.Web.UI.HtmlTextWriter $E).WriteStyleAttribute(...)"
+  - pattern: "(System.Web.UI.ClientScriptManager $E).RegisterStartupScript(...)"
+  - pattern: "(System.Web.UI.ClientScriptManager $E).RegisterClientScriptBlock(...)"
+  - pattern: "(System.Web.UI.Page $E).RegisterStartupScript(...)"
+  - pattern: "(System.Web.UI.Page $E).RegisterClientScriptBlock(...)"
+  - pattern: "return ...;"
+  languages:
+  - "csharp"
+  message: |
+    Cross Site Scripting (XSS) is an attack which exploits a web application or system to treat
+    user input
+    as markup or script code. It is important to encode the data depending on the specific context
+    it
+    is used in. There are at least six context types:
+
+    - Inside HTML tags `<div>context 1</div>`
+    - Inside attributes: `<div class="context 2"></div>`
+    - Inside event attributes `<button onclick="context 3">button</button>`
+    - Inside script blocks: `<script>var x = "context 4"</script>`
+    - Unsafe element HTML assignment: `element.innerHTML = "context 5"`
+    - Inside URLs: `<iframe src="context 6"></iframe><a href="context 6">link</a>`
+
+    Script blocks alone have multiple ways they need to be encoded. Extra care must be taken if
+    user input
+    is ever output inside of script tags.
+
+    User input that is displayed within the application must be encoded, sanitized or validated
+    to ensure it cannot be treated as HTML or executed as Javascript code. Care must also be
+    taken
+    to not mix server-side templating with client-side templating, as the server-side templating
+    will
+    not encode things like {{ 7*7 }} which may execute client-side templating features.
+
+    It is _NOT_ advised to encode user input prior to inserting into a data store. The data will
+    need to be
+    encoded depending on context of where it is output. It is much safer to force the displaying
+    system to
+    handle the encoding and not attempt to guess how it should be encoded.
+
+    Consider using built-in framework capabilities for automatically encoding user input.
+    Depending
+    on output context, consider using the following `System.Text.Encodings.Web` encoders:
+
+    - [HtmlEncoder](https://learn.microsoft.com/en-us/dotnet/api/system.text.encodings.web.htmlencoder)
+    - [JavaScriptEncoder](https://learn.microsoft.com/en-us/dotnet/api/system.text.encodings.web.javascriptencoder)
+    - [UrlEncoder](https://learn.microsoft.com/en-us/dotnet/api/system.text.encodings.web.urlencoder)
+
+    For more information on protecting ASP.NET Core applications from XSS see:
+    https://learn.microsoft.com/en-us/aspnet/core/security/cross-site-scripting#accessing-encoders-in-code
+  metadata:
+    shortDescription: "Improper neutralization of input during web page generation
+      ('Cross-site Scripting')"
+    category: "security"
+    cwe: "CWE-79"
+  severity: "WARNING"

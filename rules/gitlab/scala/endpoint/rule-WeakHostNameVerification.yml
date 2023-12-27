@@ -1,0 +1,42 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_endpoint_rule-WeakHostNameVerification"
+  languages:
+  - "scala"
+  message: |
+    A HostnameVerifier that accept any host are often use because of certificate
+    reuse on many hosts. As a consequence, this is vulnerable to Man-in-the-middle
+    attacks since the client will trust any certificate.
+  metadata:
+    category: "security"
+    cwe: "CWE-295"
+    shortDescription: "Improper Certificate Validation"
+  patterns:
+  - pattern-either:
+    - patterns:
+      - pattern-inside: |
+          class $V extends HostnameVerifier {
+            ...
+          }
+      - pattern-either:
+        - pattern: "def verify(...) = true"
+        - pattern: |
+            def verify(...) = {
+              return true
+            }
+    - patterns:
+      - pattern-inside: |
+          class $V extends X509TrustManager {
+            ...
+          }
+      - pattern-either:
+        - pattern: "def checkClientTrusted(...): Unit = {}"
+        - pattern: "def checkServerTrusted(...): Unit = {}"
+        - pattern: "def checkClientTrusted(...) = {}"
+        - pattern: "def checkServerTrusted(...) = {}"
+        - pattern: "def getAcceptedIssuers(): Array[X509Certificate] = null"
+        - pattern: "def getAcceptedIssuers(): Array[X509Certificate] = {}"
+  severity: "WARNING"

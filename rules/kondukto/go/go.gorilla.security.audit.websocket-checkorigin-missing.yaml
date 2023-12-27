@@ -1,0 +1,25 @@
+rules:
+- id: go.gorilla.security.audit.websocket-checkorigin-missing
+  metadata:
+    cwe: 'CWE-352'
+    owasp: 'A1: Injection'
+    references:
+      - https://christian-schneider.net/CrossSiteWebSocketHijacking.html
+  patterns:
+    - pattern-either: 
+      - pattern: |
+          $X.Upgrade(...)
+      - pattern: |
+          $X.Upgrade(...)
+    - pattern-not-inside: |
+        func $HANDLER(...) {
+          ...   
+          $X.CheckOrigin
+          ...
+        }
+  message: |
+    The 'Origin' header of the Websocket handshake request is not checked.
+    This could lead to Cross-Site WebSocket Hijacking vulnerability (CSWSH).
+  languages: [go]
+  severity: WARNING
+

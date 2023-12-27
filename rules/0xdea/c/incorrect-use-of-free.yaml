@@ -1,0 +1,65 @@
+rules:
+  - id: raptor-incorrect-use-of-free
+    metadata:
+      author: Marco Ivaldi <raptor@0xdeadbeef.info>
+      references:
+        - https://cwe.mitre.org/data/definitions/590
+        - https://github.com/shellphish/how2heap/blob/master/glibc_2.23/house_of_spirit.c
+      confidence: MEDIUM
+      # NOTE: this rule only covers free() called on stack-allocated
+      # buffers; it does not cover other instances of free() called on
+      # non-heap-allocated buffers; it also does not cover alloca() 
+      # and custom wrappers to free(). 
+      # See also raptor-mismatched-memory-management.yaml.
+    message: >-
+      The software calls free() on a pointer to memory that has a short 
+      lifetime and was not allocated using associated heap allocation 
+      functions such as malloc(), calloc(), or realloc().
+    severity: ERROR
+    languages:
+      - c
+      - cpp
+    pattern-either:
+      - patterns:
+        - pattern: free($PTR)
+        - pattern-either:
+          # array
+          - pattern-inside: |
+              $TYPE $PTR[$LEN];
+              ...
+          - pattern-inside: |
+              $TYPE $PTR[$LEN] = $EXPR;
+              ...
+          # pointer to array
+          - pattern-inside: |
+              $TYPE $ARR[$LEN];
+              ...
+              $PTR = $ARR;
+              ...
+          - pattern-inside: |
+              $TYPE $ARR[$LEN] = $EXPR;
+              ...
+              $PTR = $ARR;
+              ...
+      - patterns:
+        # address of local variable
+        - pattern: free(&$VAR)
+        - pattern-either:
+          - pattern-inside: |
+              $TYPE $VAR;
+              ...
+          - pattern-inside: |
+              $TYPE $VAR = $EXPR;
+              ...          
+          - pattern-inside: |
+              $TYPE $VAR[$LEN];
+              ...
+          - pattern-inside: |
+              $TYPE $VAR[$LEN] = $EXPR;
+              ...
+          - pattern-inside: |
+              $TYPE * $VAR;
+              ...
+          - pattern-inside: |
+              $TYPE * $VAR = $EXPR;
+              ...

@@ -1,0 +1,72 @@
+# yamllint disable
+# License: GNU Lesser General Public License v3.0
+# source (original): https://github.com/ajinabraham/njsscan/blob/master/njsscan/rules/semantic_grep/eval/eval_vm2_injection.yaml
+# hash: e7a0a61
+# yamllint enable
+---
+rules:
+- id: "rules_lgpl_javascript_eval_rule-vm2-code-injection"
+  patterns:
+  - pattern-inside: |
+      require('vm2')
+      ...
+  - pattern-either:
+    - pattern-inside: |-
+        function ($REQ, $RES, ...) {...}
+    - pattern-inside: |-
+        function $FUNC($REQ, $RES, ...) {...}
+    - pattern-inside: |-
+        $X = function $FUNC($REQ, $RES, ...) {...}
+    - pattern-inside: |-
+        var $X = function $FUNC($REQ, $RES, ...) {...};
+    - pattern-inside: |-
+        $APP.$METHOD(..., function $FUNC($REQ, $RES, ...) {...})
+  - pattern-either:
+    - pattern: |
+        $VM.run(<... $REQ.$QUERY.$FOO ...>,...)
+    - pattern: |
+        $CODE = <... $REQ.$QUERY.$FOO ...>;
+        ...
+        $VM.run(<... $CODE ...>,...)
+    - pattern: |
+        new VM(...).run(<... $REQ.$QUERY.$FOO ...>,...)
+    - pattern: |
+        new NodeVM(...).run(<... $REQ.$QUERY.$FOO ...>,...)
+    - pattern: |
+        $CODE = <... $REQ.$QUERY.$FOO ...>;
+        ...
+        new NodeVM(...).run(<... $CODE ...>,...)
+    - pattern: |
+        $CODE = <... $REQ.$QUERY.$FOO ...>;
+        ...
+        new VMScript(<... $CODE ...>,...)
+    - pattern: |
+        $VM.run(<... $REQ.$BODY ...>,...)
+    - pattern: |
+        $CODE = <... $REQ.$BODY ...>;
+        ...
+        $VM.run(<... $CODE ...>,...)
+    - pattern: |
+        new VM(...).run(<... $REQ.$BODY ...>,...)
+    - pattern: |
+        $CODE = <... $REQ.$BODY ...>;
+        ...
+        new VM(...).run($CODE,...)
+    - pattern: |
+        new NodeVM(...).run(<... $REQ.$BODY ...>,...)
+    - pattern: |
+        $CODE = <... $REQ.$BODY ...>;
+        ...
+        new NodeVM(...).run(<... $CODE ...>,...)
+    - pattern: |
+        $CODE = <... $REQ.$BODY ...>;
+        ...
+        new VMScript(<... $CODE ...>,...)
+  message: |
+    Untrusted user input reaching `vm2` can result in code injection.
+  severity: "WARNING"
+  languages:
+  - "javascript"
+  metadata:
+    owasp: "A1:2017-Injection"
+    cwe: "CWE-94: Improper Control of Generation of Code (Code Injection)"

@@ -1,0 +1,128 @@
+rules:
+  - id: raptor-signed-unsigned-conversion
+    metadata:
+      author: Marco Ivaldi <raptor@0xdeadbeef.info>
+      references:
+        - https://cwe.mitre.org/data/definitions/195
+        - https://cwe.mitre.org/data/definitions/196
+        - https://cwe.mitre.org/data/definitions/194
+        - https://cwe.mitre.org/data/definitions/191
+        - https://cwe.mitre.org/data/definitions/681
+        - https://cwe.mitre.org/data/definitions/789
+        - https://g.co/kgs/PCHQjJ
+        - https://github.com/struct/mms
+        - https://www.sei.cmu.edu/downloads/sei-cert-c-coding-standard-2016-v01.pdf
+        - http://www.phrack.org/issues/60/10.html#article
+        - https://docs.microsoft.com/en-us/cpp/sanitizers/asan-error-examples
+      confidence: LOW
+      # NOTE: the deep expression operator is necessary to catch some
+      # matches because C/C++ integer promotions do not seem entirely
+      # supported by Semgrep; this may generate false positives.
+      # NOTE: some types (e.g. char, short, long), functions (e.g.,
+      # widechar and some alloc functions, custom functions), and use 
+      # cases (e.g., comparisons) are not covered.
+      # NOTE: memcpy_s, memmove_s, memset_explicit and similar variants 
+      # are not covered.
+    message: >-
+      The software uses a signed primitive and performs a cast to an
+      unsigned primitive, or uses an unsigned primitive and performs a cast
+      to a signed primitive, which can produce an unexpected value.
+      When the result of a function is to be used as a size parameter,
+      using negative return values can have unexpected results.
+      Although less frequent an issue, unsigned-to-signed conversion can be 
+      the precursor to buffer underwrite conditions. Buffer underwrites 
+      occur frequently when large unsigned values are cast to signed values, 
+      and then used as indexes into a buffer or for pointer arithmetic.
+    severity: WARNING
+    languages:
+      - c
+      - cpp
+    pattern-either:
+      # signed to unsigned
+      - pattern: (unsigned int $UNSIGNED) = <... (int $SIGNED) ...>
+      - pattern: (unsigned $UNSIGNED) = <... (int $SIGNED) ...>
+      - pattern: (size_t $UNSIGNED) = <... (int $SIGNED) ...>
+      - pattern: (size_t $UNSIGNED) = <... (off_t $SIGNED) ...>
+      - patterns:
+        - pattern-either:
+          - pattern: |
+              unsigned int $FUN(...)
+              {
+              ...
+              return (int $SIGNED);
+              }
+          - pattern: |
+              unsigned $FUN(...)
+              {
+              ...
+              return (int $SIGNED);
+              }
+          - pattern: |
+              size_t $FUN(...)
+              {
+              ...
+              return (int $SIGNED);
+              }
+          - pattern: |
+              size_t $FUN(...)
+              {
+              ...
+              return (off_t $SIGNED);
+              }
+        # improve output readability
+        - focus-metavariable: $FUN
+      - pattern: strncpy($DST, $SRC, (int $LEN))
+      - pattern: stpncpy($DST, $SRC, (int $LEN))
+      - pattern: strncat($DST, $SRC, (int $LEN))
+      - pattern: strlcpy($DST, $SRC, (int $LEN))
+      - pattern: strlcat($DST, $SRC, (int $LEN))
+      - pattern: snprintf($BUF, (int $LEN), ...)
+      - pattern: vsnprintf($BUF, (int $LEN), ...)
+      - pattern: getcwd($BUF, (int $LEN))
+      - pattern: memcpy($DST, $SRC, (int $LEN))
+      - pattern: memccpy($DST, $SRC, $CHAR, (int $LEN))
+      - pattern: memmove($DST, $SRC, (int $LEN))
+      - pattern: memset($DST, $CHAR, (int $LEN))
+      - pattern: bcopy($SRC, $DST, (int $LEN))
+      - pattern: alloca((int $LEN))
+      - pattern: malloc((int $LEN))
+      - pattern: calloc($CNT, (int $LEN))
+      - pattern: calloc((int $CNT), $LEN)
+      - pattern: realloc($PTR, (int $LEN))
+      - pattern: read($FD, $BUF, (int $LEN))
+      - pattern: recv($SD, $BUF, (int $LEN), $FL)
+      - pattern: recvfrom($SD, $BUF, (int $LEN), $FL, ...)
+      - pattern: fread($PTR, (int $LEN), $NITEMS, $FS)
+      # unsigned to signed
+      - pattern: (int $SIGNED) = <... (unsigned int $UNSIGNED) ...>
+      - pattern: (int $SIGNED) = <... (unsigned $UNSIGNED) ...>
+      - pattern: (int $SIGNED) = <... (size_t $UNSIGNED) ...>
+      - pattern: (off_t $SIGNED) = <... (size_t $UNSIGNED) ...>
+      - patterns:
+        - pattern-either:
+          - pattern: |
+              int $FUN(...)
+              {
+              ...
+              return (unsigned int $UNSIGNED);
+              }
+          - pattern: |
+              int $FUN(...)
+              {
+              ...
+              return (unsigned $UNSIGNED);
+              }
+          - pattern: |
+              int $FUN(...)
+              {
+              ...
+              return (size_t $UNSIGNED);
+              }
+          - pattern: |
+              off_t $FUN(...)
+              {
+              ...
+              return (size_t $UNSIGNED);
+              }
+        # improve output readability
+        - focus-metavariable: $FUN

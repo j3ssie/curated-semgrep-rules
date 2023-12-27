@@ -1,0 +1,26 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_perm_rule-OverlyPermissiveFilePermissionInline"
+  languages:
+  - "scala"
+  message: |
+    Overly permissive file permission
+  metadata:
+    category: "security"
+    confidence: "HIGH"
+    cwe: "CWE-732"
+    shortDescription: "Incorrect Permission Assignment for Critical Resource"
+  patterns:
+  - pattern-either:
+    - pattern: "java.nio.file.Files.setPosixFilePermissions(..., java.nio.file.attribute.PosixFilePermissions.fromString(\"$PERM_STRING\"));"
+    - pattern: |
+        $PERMISSIONS = java.nio.file.attribute.PosixFilePermissions.fromString("$PERM_STRING");
+        ...
+        java.nio.file.Files.setPosixFilePermissions(..., $PERMISSIONS);
+  - metavariable-regex:
+      metavariable: "$PERM_STRING"
+      regex: "[rwx-]{6}[rwx]{1,}"
+  severity: "WARNING"

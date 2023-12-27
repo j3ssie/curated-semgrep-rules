@@ -1,0 +1,22 @@
+# yamllint disable
+# License: GNU Lesser General Public License v3.0
+# source (original): https://github.com/ajinabraham/njsscan/blob/master/njsscan/rules/semantic_grep/crypto/crypto_node.yaml
+# hash: e7a0a61
+# yamllint enable
+---
+rules:
+- id: "rules_lgpl_javascript_crypto_rule-node-aes-ecb"
+  patterns:
+  - pattern-either:
+    - pattern: |
+        $X.createCipheriv("=~/^aes-([0-9]+)-ecb$/i", ...)
+    - pattern: |
+        $X.createDecipheriv("=~/^aes-([0-9]+)-ecb$/i", ...)
+  message: |
+    AES with ECB mode is deterministic in nature and not suitable for encrypting large amount of repetitive data.
+  languages:
+  - "javascript"
+  severity: "ERROR"
+  metadata:
+    owasp: "A9:2017-Using Components with Known Vulnerabilities"
+    cwe: "CWE-327: Use of a Broken or Risky Cryptographic Algorithm"

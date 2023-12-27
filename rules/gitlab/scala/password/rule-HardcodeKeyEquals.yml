@@ -1,0 +1,38 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_password_rule-HardcodeKeyEquals"
+  languages:
+  - "scala"
+  message: |
+    Cryptographic keys should not be kept in the source code. The source code can be widely shared
+    in an enterprise environment, and is certainly shared in open source. To be managed safely,
+    passwords and secret keys should be stored in separate configuration files or keystores.
+  metadata:
+    category: "security"
+    cwe: "CWE-321"
+    shortDescription: "Use of Hard-coded Cryptographic Key"
+    technology:
+    - "scala"
+  patterns:
+  - pattern-not-inside: |
+      def $FUNC(..., $VAR_NAME: String, ...): $TYPE = {
+          ...
+      }
+  - pattern-either:
+    - pattern: "($VAR_NAME: String).equals(...)"
+    - pattern: "($OTHER: $STRING).equals(($VAR_NAME: String))"
+    - pattern: "java.util.Arrays.equals(...,($VAR_NAME: String),...)"
+    - pattern: "($VAR_NAME: Array[byte]).equals(...)"
+    - pattern: "($OTHER: Array[byte]).equals(($VAR_NAME: Array[byte]))"
+    - pattern: "java.util.Arrays.equals(...,($VAR_NAME: Array[byte]),...)"
+    - pattern: "java.lang.Byte.compare(...,($VAR_NAME: Array[byte]),...)"
+    - pattern: "($VAR_NAME: Array[char]).equals(...)"
+    - pattern: "($OTHER: Array[char]).equals(($VAR_NAME: Array[char]))"
+    - pattern: "java.util.Arrays.equals(...,($VAR_NAME: Array[char]),...)"
+  - metavariable-regex:
+      metavariable: "$VAR_NAME"
+      regex: "(?i).*(pass|pwd|psw|secret|key|cipher|crypt|des|aes|mac|private|sign|cert).*"
+  severity: "WARNING"

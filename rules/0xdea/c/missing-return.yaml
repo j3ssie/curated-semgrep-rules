@@ -1,0 +1,34 @@
+rules:
+  - id: raptor-missing-return
+    metadata:
+      author: Marco Ivaldi <raptor@0xdeadbeef.info>
+      references:
+        - https://cwe.mitre.org/data/definitions/393
+        - https://cwe.mitre.org/data/definitions/394
+      confidence: LOW
+      # NOTE: function declarations in the form type func() are
+      # not supported to avoid false positives due to current 
+      # Semgrep limitations.
+      # NOTE: C++ class declarations should also be excluded, but
+      # apparently this pattern is not supported by Semgrep.
+    message: >-
+      A non-void function does not have a return statement. Hence, its
+      return value can be considered undefined.
+    severity: INFO
+    languages:
+      - c
+      - cpp
+    patterns:
+      - pattern: $TYPE $FUN($ARG, ...) { ... }
+      # exclude function declarations
+      - pattern-not: $TYPE $FUN(...);
+      # exclude functions with return statement
+      - pattern-not: $TYPE $FUN(...) { ... return $RET; }
+      # exclude main function
+      - pattern-not: int main(...) { ... }
+      # exclude void functions
+      - pattern-not: void $FUN(...) { ... }
+      # improve output readability
+      - focus-metavariable: $FUN
+      # exclude else if (commented-out for performance reasons)
+      # - pattern-not: ... if ($COND) { ... }

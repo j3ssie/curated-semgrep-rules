@@ -1,0 +1,35 @@
+# yamllint disable
+# License: Apache 2.0 (c) gosec
+# source (original): https://github.com/securego/gosec/blob/master/rules/rand.go
+# yamllint enable
+---
+rules:
+- id: "go_crypto_rule-weakrandsource"
+  languages:
+  - "go"
+  patterns:
+  - patterns:
+    - pattern-inside: |
+        import $IMPORT "math/rand"
+        ...
+    - pattern-not-inside: |
+        import "crypto/rand"
+    - pattern-either:
+      - pattern: "$IMPORT.$METHOD(...)"
+      - pattern: "rand.$METHOD(...)"
+  - metavariable-regex:
+      metavariable: "$METHOD"
+      regex: "(Float32|Float64|Int31|Int31n|Int63|Int63n|NormalFloat64|Uint32|Uint64)"
+  message: |
+    Go's `math/rand` is not meant for use in generating random numbers for any cryptographic or
+    security sensitive context. This includes generating random numbers that could be used in
+    user specific identifiers or where the random number that is generated is considered to
+    be secret.
+
+    Replace all imports of `math/rand` with `crypto/rand`.
+  metadata:
+    shortDescription: "Use of cryptographically weak Pseudo-Random Number Generator
+      (PRNG)"
+    cwe: "CWE-338"
+    owasp: "A3:2017-Sensitive Data Exposure"
+  severity: "WARNING"

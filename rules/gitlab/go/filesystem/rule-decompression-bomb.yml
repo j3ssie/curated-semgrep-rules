@@ -1,0 +1,59 @@
+# yamllint disable
+# License: Apache 2.0 (c) gosec
+# source (original): https://github.com/securego/gosec/blob/master/rules/decompression-bomb.go
+# hash: c6e10af 
+# yamllint enable
+---
+rules:
+- id: "go_filesystem_rule-decompression-bomb"
+  languages:
+  - "go"
+  mode: "taint"
+  pattern-sinks:
+  - pattern: "io.Copy(...)"
+  - pattern: "io.CopyBuffer(...)"
+  pattern-sources:
+  - pattern: "gzip.NewReader(...)"
+  - pattern: "zlib.NewReader(...)"
+  - pattern: "bzip2.NewReader(...)"
+  - pattern: "flate.NewReader(...)"
+  - pattern: "lzw.NewReader(...)"
+  - pattern: "tar.NewReader(...)"
+  - pattern: "zip.NewReader(...)"
+  - pattern: "zlib.NewReaderDict(...)"
+  - pattern: "flate.NewReaderDict(...)"
+  - pattern: "zip.OpenReader(...)"
+  message: |
+    Directly decompressing files or buffers may lead to a potential Denial of Service (DoS)
+    due to a decompression bomb. Decompression bombs are maliciously compressed files
+    or data that decompresses to extremely large sizes. This can cause the process to run
+    out of memory, or the disk to fill up.
+
+    To protect against decompression bombs, an
+    [io.LimitReader(...)](https://pkg.go.dev/io#LimitReader)
+    should be used to limit how much can be read during the decompression routine.
+
+    Example using `io.LimitReader` to protect against a decompression bomb:
+    ```
+    f, err := os.Open("some.gz")
+    if err != nil {
+      log.Fatal(err)
+    }
+
+    r, err := gzip.NewReader(f)
+    if err != nil {
+      log.Fatal(err)
+    }
+
+    const oneMegabyte = 1024 * 1024
+    limitedReader := io.LimitReader(r, oneMegabyte)
+
+    // use limitedReader to stop copying after 1 MB
+    if _, err := io.Copy(os.Stdout, limitedReader); err != nil {
+      log.Fatal(err)
+    }
+    ```
+  metadata:
+    shortDescription: "Improper handling of highly compressed data"
+    cwe: "CWE-409"
+  severity: "WARNING"

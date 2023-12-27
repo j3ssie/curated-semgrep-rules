@@ -1,0 +1,63 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_inject_rule-SpotbugsPathTraversalRelative"
+  languages:
+  - "scala"
+  message: |
+    "The software uses an HTTP request parameter to construct a pathname that should be within a
+    restricted directory, but it does not properly neutralize sequences such as ".." that can
+    resolve to a location that is outside of that directory. See
+    http://cwe.mitre.org/data/definitions/23.html for more information."
+  metadata:
+    category: "security"
+    cwe: "CWE-22"
+    shortDescription: "Improper Limitation of a Pathname to a Restricted Directory
+      ('Path Traversal')"
+    technology:
+    - "scala"
+  mode: "taint"
+  pattern-sanitizers:
+  - pattern: "org.apache.commons.io.FilenameUtils.getName(...)"
+  pattern-sinks:
+  - patterns:
+    - pattern-inside: |
+        $U = new java.net.URI($VAR)
+    - pattern-either:
+      - pattern-inside: |-
+          new java.io.File($U)
+      - pattern-inside: |-
+          java.nio.file.Paths.get($U)
+    - pattern: "$VAR"
+  - patterns:
+    - pattern-inside: |-
+        new java.io.RandomAccessFile($INPUT,...)
+    - pattern: "$INPUT"
+  - pattern: "new java.io.FileReader(...)"
+  - pattern: "new javax.activation.FileDataSource(...)"
+  - pattern: "new java.io.FileInputStream(...)"
+  - pattern: "new java.io.File(...)"
+  - pattern: "java.nio.file.Paths.get(...)"
+  - pattern: "java.io.File.createTempFile(...)"
+  - pattern: "java.io.File.createTempDirectory(...)"
+  - pattern: "java.nio.file.Files.createTempFile(...)"
+  - pattern: "java.nio.file.Files.createTempDirectory(...)"
+  - patterns:
+    - pattern-inside: |-
+        new java.io.FileWriter($PATH, ...)
+    - pattern: "$PATH"
+  - patterns:
+    - pattern-inside: |-
+        new java.io.FileOutputStream($PATH, ...)
+    - pattern: "$PATH"
+  pattern-sources:
+  - patterns:
+    - pattern-inside: |
+        $P = ($REQ: HttpServletRequest ).getParameter(...);
+        ...
+    - pattern-either:
+      - pattern: "$P + ..."
+      - pattern: "... + $P"
+  severity: "WARNING"

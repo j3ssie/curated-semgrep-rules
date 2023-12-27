@@ -1,0 +1,30 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "python_log_rule-logging-config-insecure-listen"
+  languages:
+  - "python"
+  message: |
+    The application was found calling the `logging.config.listen`` function, which provides the
+    ability to listen for
+    external configuration files over a socket server. This listen socket parses part of the
+    configuration and calls
+    `eval` on the supplied configuration file. A local user, or an adversary who is able to
+    exploit
+    a Server Side Request Forgery (SSRF) attack to communicate over localhost, would be able to
+    execute arbitrary
+    code by passing in a logging config that contains python code.
+
+    To remediate the issue, remove the call to `logging.config.listen` method.
+
+    For more information on the listen functionality see:
+    - https://docs.python.org/3/library/logging.config.html#logging.config.listen
+  metadata:
+    cwe: "CWE-94"
+    shortDescription: "Improper control of generation of code ('Code Injection')"
+    category: "security"
+  patterns:
+  - pattern: "logging.config.listen(...)"
+  severity: "WARNING"

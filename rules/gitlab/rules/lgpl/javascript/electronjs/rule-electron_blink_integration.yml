@@ -1,0 +1,22 @@
+# yamllint disable
+# License: GNU Lesser General Public License v3.0
+# source (original): https://github.com/ajinabraham/njsscan/blob/master/njsscan/rules/semantic_grep/electronjs/security_electron.yaml
+# hash: e7a0a61
+# yamllint enable
+---
+rules:
+- id: "rules_lgpl_javascript_electronjs_rule-electron-blink-integration"
+  patterns:
+  - pattern-either:
+    - pattern: |
+        new BrowserWindow({webPreferences: {enableBlinkFeatures: '...'}})
+    - pattern: |
+        var $X = {webPreferences: {enableBlinkFeatures: '...'}};
+  message: |
+    Blink's expirimental features are enabled in this application. Some of the features may affect the security of the application.
+  languages:
+  - "javascript"
+  severity: "WARNING"
+  metadata:
+    owasp: "A6:2017-Security Misconfiguration"
+    cwe: "CWE-272: Least Privilege Violation"

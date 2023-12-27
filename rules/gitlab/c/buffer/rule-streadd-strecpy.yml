@@ -1,0 +1,25 @@
+# yamllint disable
+# The ruleset is generated from flawfinder official rule repository hosted on github.
+# License: GPL 2.0 (c) 1989, 1991 Free Software Foundation, Inc.
+# source: https://github.com/david-a-wheeler/flawfinder/blob/e0d8827c3b714a883ce8036edc832721f4619524/flawfinder.py
+# yamllint enable
+---
+rules:
+- id: "c_buffer_rule-streadd-strecpy"
+  languages:
+  - "c"
+  message: |
+    The `strecpy` and `streadd` functions require that the destination buffer size be at least
+    four
+    times the size of the source due to each character potentially becoming a `\` and 3 digits.
+
+    For more information please see:
+    https://docs.oracle.com/cd/E18752_01/html/816-5172/streadd-3gen.html
+  metadata:
+    shortDescription: "Insecure string processing functions"
+    cwe: "CWE-120"
+    owasp: "A1:2017-Injection"
+  pattern-either:
+  - pattern: "streadd(...)"
+  - pattern: "strecpy(...)"
+  severity: "ERROR"

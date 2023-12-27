@@ -1,0 +1,49 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "javascript_eval_rule-eval-with-expression"
+  languages:
+  - "javascript"
+  - "typescript"
+  patterns:
+  - pattern: "eval($OBJ)"
+  - pattern-not: "eval(\"...\")"
+  severity: "WARNING"
+  message: |
+    The application was found calling the `eval` function with a non-literal variable. If the
+    variable comes from user-supplied input, an adversary could attempt to execute arbitrary
+    JavaScript
+    code. This could lead to a full system compromise in Node applications or Cross-site Scripting
+    (XSS) in web applications.
+
+    To remediate this issue, remove all calls to `eval` and consider alternative methods for
+    executing
+    the necessary business logic. There is almost no safe method of calling `eval` with
+    user-supplied input.
+    Instead, consider alternative methods such as using property accessors to dynamically access
+    values.
+
+    Example using property accessors to dynamically access an object's property:
+    ```
+    // Define an object
+    const obj = {key1: 'value1', key2: 'value2'};
+    // Get key dynamically from user input
+    const key = getUserInput();
+    // Check if the key exists in our object and return it, or a default empty string
+    const value = (obj.hasOwnProperty(key)) ? obj[key] : '';
+    // Work with the value
+    ```
+
+    For more information on why not to use `eval`, and alternatives see:
+    - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval#never_use_eval!
+  metadata:
+    cwe: "CWE-95"
+    owasp: "A1:2017-Injection"
+    shortDescription: "Improper neutralization of directives in dynamically evaluated
+      code ('Eval Injection')"
+    category: "security"
+    # yamllint disable
+    source-rule-url: "https://github.com/nodesecurity/eslint-plugin-security/blob/master/rules/detect-eval-with-expression.js"
+    # yamllint enable

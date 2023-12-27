@@ -1,0 +1,31 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "java_endpoint_rule-UnvalidatedRedirect"
+  languages:
+  - "java"
+  message: |
+    Unvalidated redirects occur when an application redirects a user to a
+    destination URL specified by a user supplied parameter that is not validated.
+    Such vulnerabilities can be used to facilitate phishing attacks.
+  metadata:
+    category: "security"
+    cwe: "CWE-601"
+    shortDescription: "URL Redirection to Untrusted Site ('Open Redirect')"
+  patterns:
+  - pattern-either:
+    - patterns:
+      - pattern: "(HttpServletResponse $REQ).sendRedirect(...)"
+      - pattern-not: "(HttpServletResponse $REQ).sendRedirect(\"...\")"
+    - patterns:
+      - pattern: "(HttpServletResponse $REQ).addHeader(...)"
+      - pattern-not: "(HttpServletResponse $REQ).addHeader(\"...\", \"...\")"
+    - patterns:
+      - pattern: "(HttpServletResponse $REQ).encodeURL(...)"
+      - pattern-not: "(HttpServletResponse $REQ).encodeURL(\"...\")"
+    - patterns:
+      - pattern: "(HttpServletResponse $REQ).encodeRedirectUrl(...)"
+      - pattern-not: "(HttpServletResponse $REQ).encodeRedirectUrl(\"...\")"
+  severity: "ERROR"

@@ -1,0 +1,27 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "scala_xxe_rule-Document"
+  languages:
+  - "scala"
+  message: |
+    XML External Entity (XXE) attacks can occur when an XML parser supports XML
+    entities while processing XML received from an untrusted source.
+  metadata:
+    category: "security"
+    cwe: "CWE-611"
+    shortDescription: "Improper Restriction of XML External Entity Reference ('XXE')"
+  patterns:
+  - pattern-inside: |
+      $DF = DocumentBuilderFactory.newInstance
+      ...
+  - pattern-not-inside: |
+      $DF.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
+      ...
+  - pattern-not-inside: |
+      $DF.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true)
+      ...
+  - pattern: "$DB.parse(...)"
+  severity: "ERROR"

@@ -1,0 +1,39 @@
+# yamllint disable
+# License: Apache 2.0 (c) gosec
+# source (original): https://github.com/securego/gosec/blob/master/rules/bind.go
+# hash: c6e10af 
+# yamllint enable
+---
+rules:
+- id: "go_network_rule-bind-to-all-interfaces"
+  languages:
+  - "go"
+  patterns:
+  - pattern-either:
+    - pattern: "net.Listen(..., \"$ADDR\")"
+    - pattern: "tls.Listen(..., \"$ADDR\", ...)"
+  - metavariable-regex:
+      metavariable: "$ADDR"
+      regex: "0.0.0.0:[0-9]+"
+  message: |
+    Binding to all network interfaces can potentially open up a service to
+    traffic on unintended interfaces, that may not be properly documented or
+    secured. By passing "0.0.0.0" as the address to the `Listen` family of functions,
+    the application will bind to all interfaces.
+
+    Consider passing in the interface ip address through an environment variable,
+    configuration file, or by determining the primary interface(s) IP address.
+
+    Example getting the IP address from an environment variable `IP_ADDRESS`:
+    ```
+    addr := os.Getenv("IP_ADDRESS")
+    listener, err := net.Listen("tcp", addr)
+    if err != nil {
+      log.Fatal(err)
+    }
+    ```
+  metadata:
+    shortDescription: "Exposure of sensitive information to an unauthorized actor"
+    cwe: "CWE-200"
+    owasp: "A6:2017-Security Misconfiguration"
+  severity: "WARNING"

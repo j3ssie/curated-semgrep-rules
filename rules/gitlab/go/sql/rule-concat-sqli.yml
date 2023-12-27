@@ -1,0 +1,87 @@
+# yamllint disable
+# License: Apache 2.0 (c) gosec
+# source (original): https://github.com/securego/gosec/blob/master/rules/sql.go
+# hash: c6e10af
+# yamllint enable
+---
+rules:
+- id: "go_sql_rule-concat-sqli"
+  languages:
+  - "go"
+  patterns:
+  - pattern-inside: |
+      import "database/sql"
+      ...
+  - pattern-either:
+    - patterns:
+      - pattern: "$Q := \"$QUERY\" + ..."
+      - pattern-not: "$Q := \"$QUERY\" + \"...\""
+    - patterns:
+      - pattern: "var $Q = \"$QUERY\" + ..."
+      - pattern-not: "var $Q = \"$QUERY\" + \"...\""
+    - patterns:
+      - pattern-inside: |
+          $Q := "$QUERY"
+          ...
+      - pattern: "$Q += ..."
+      - pattern-not: "$Q += \"...\""
+    - patterns:
+      - pattern: "fmt.Sprintf(\"$QUERY\", ...)"
+      - pattern-not: "fmt.Sprintf(\"$QUERY\", \"...\")"
+    - patterns:
+      - pattern: |
+          ($B : strings.Builder).WriteString("$QUERY")
+          ...
+          $B.WriteString(...)
+    - patterns:
+      - pattern: "$DB.$METHOD(\"$QUERY\" + ...)"
+      - pattern-not: "$DB.$METHOD(\"$QUERY\" + \"...\")"
+      - metavariable-regex:
+          metavariable: "$METHOD"
+          regex: "^(Exec(Context)?|Query(Context)?|QueryRow(Context)?)$"
+    - patterns:
+      - pattern: "$DB.$METHOD(..., \"$QUERY\" + ...)"
+      - pattern-not: "$DB.$METHOD(..., \"$QUERY\" + \"...\")"
+      - metavariable-regex:
+          metavariable: "$METHOD"
+          regex: "^(Exec(Context)?|Query(Context)?|QueryRow(Context)?)$"
+  - metavariable-regex:
+      metavariable: "$QUERY"
+      regex: "(?i)(SELECT|DELETE|INSERT|UPDATE|INTO|FROM|WHERE|LIKE)\\b"
+  message: |
+    SQL Injection is a critical vulnerability that can lead to data or system compromise. By
+    dynamically generating SQL query strings, user input may be able to influence the logic of
+    the SQL statement. This could lead to an adversary accessing information they should
+    not have access to or in some circumstances, being able to execute OS functionality or code.
+
+    Replace all dynamically generated SQL queries with parameterized queries. In situations where
+    dynamic queries must be created, never use direct user input, but instead use a map or
+    dictionary of valid values and resolve them using a user supplied key.
+
+    For example, some database drivers do not allow parameterized queries for `>` or `<` comparison
+    operators. In these cases, do not use a user supplied `>` or `<` value, but rather have the
+    user
+    supply a `gt` or `lt` value. The alphabetical values are then used to look up the `>` and `<`
+    values to be used in the construction of the dynamic query. The same goes for other queries
+    where
+    column or table names are required but cannot be parameterized.
+
+    Example using parameterized queries with `sql.Query`:
+    ```
+    rows, err := db.Query("SELECT * FROM users WHERE userName = ?", userName)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+    for rows.Next() {
+      // ... process rows
+    }
+    ```
+
+    For more information on SQL Injection see OWASP:
+    https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html
+  metadata:
+    shortDescription: "Improper Neutralization of Special Elements used in an SQL
+      Command ('SQL Injection')"
+    cwe: "CWE-89"
+  severity: "WARNING"

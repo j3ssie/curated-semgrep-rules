@@ -1,0 +1,29 @@
+# yamllint disable
+# The ruleset is generated from flawfinder official rule repository hosted on github.
+# License: GPL 2.0 (c) 1989, 1991 Free Software Foundation, Inc.
+# source: https://github.com/david-a-wheeler/flawfinder/blob/e0d8827c3b714a883ce8036edc832721f4619524/flawfinder.py
+# yamllint enable
+---
+rules:
+- id: "c_tmpfile_rule-tmpnam-tempnam"
+  languages:
+  - "c"
+  message: |
+    There exists a possible race condition in between the time that `tempnam` or `tmpnam`
+    returns a pathname, and the time that the program opens it, another program might create
+    that pathname using `open`, or create it as a symbolic link.
+
+    Consider using the `mkstemp` function instead, but be aware it also contains possible
+    risks. Ensure the process has called the `umask` function with restricted permissions prior
+    to calling `mkstemp` and validate the permissions prior to using the file descriptor.
+
+    For more information on temporary files please see:
+    https://wiki.sei.cmu.edu/confluence/pages/viewpage.action?pageId=87152425
+  metadata:
+    shortDescription: "Potential time of check time of use vulnerability (tmpnam/tempnam)"
+    cwe: "CWE-377"
+    owasp: "A5:2017-Broken Access Control"
+  pattern-either:
+  - pattern: "tmpnam(...)"
+  - pattern: "tempnam(...)"
+  severity: "WARNING"

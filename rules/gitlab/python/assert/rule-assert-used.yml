@@ -1,0 +1,47 @@
+# yamllint disable
+# License: MIT (c) GitLab Inc.
+# yamllint enable
+---
+rules:
+- id: "python_assert_rule-assert-used"
+  languages:
+  - "python"
+  message: |
+    The application was found using `assert` in non-test code. Usually reserved for debug and test
+    code, the `assert`
+    function is commonly used to test conditions before continuing execution. However, enclosed
+    code will be removed
+    when compiling Python code to optimized byte code. Depending on the assertion and subsequent
+    logic, this could
+    lead to undefined behavior of the application or application crashes.
+
+    To remediate this issue, remove the `assert` calls. If necessary, replace them with either `if`
+    conditions or
+    `try/except` blocks.
+
+    Example using `try/except` instead of `assert`:
+    ```
+    # Below try/except is equal to the assert statement of:
+    # assert user.is_authenticated(), "user must be authenticated"
+    try:
+        if not user.is_authenticated():
+            raise AuthError("user must be authenticated")
+    except AuthError as e:
+        # Handle error
+        # ...
+        # Return, do not continue processing
+        return
+    ```
+  metadata:
+    cwe: "CWE-754"
+    category: "security"
+    shortDescription: "Improper check for unusual or exceptional conditions"
+  patterns:
+  - pattern: "assert(...)"
+  - pattern-not-inside: |
+      import pytest
+      ...
+  - pattern-not-inside: |
+      import unittest
+      ...
+  severity: "INFO"
